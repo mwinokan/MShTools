@@ -4,13 +4,30 @@
 # Works on EUREKA
 
 source $MWSHPATH/colours.sh
-short=0
+SHORT=0
+SHOW_SURREY=1
+SHOW_GITHUB=1
+SEARCH=0
 
 while test $# -gt 0; do
   case "$1" in
     -s|--short)
       shift
       SHORT=1
+      ;;
+    -ns|--no-surrey)
+      shift
+      SHOW_SURREY=0
+      ;;
+    -ng|--no-github)
+      shift
+      SHOW_GITHUB=0
+      ;;
+    -n|--name)
+      SEARCH=1
+      shift
+      TAG=$1
+      shift
       ;;
     *)
       echo -e $colError"Unknown flag: "$colArg$1$colClear
@@ -29,11 +46,12 @@ GL_STAFFNAME=$(grep -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 for GIT in $ALL_GITS ; do
 
   # grep -P "(?<=$GH_USER/).*(?=.git)" $GIT/config
-  REPO_NAME=$(cat $GIT/config | grep -oP "(?<=$GH_USER/).*(?=.git)")
   if [ $(cat $GIT/config | grep "github" | wc -l) -eq 1 ] ; then
     ## github repo
+    if [ $SHOW_GITHUB -eq 0 ] ; then continue ; fi
     if [ $(cat $GIT/config | grep $GH_USER | wc -l) -eq 1 ] ; then
       ## my repo
+      REPO_NAME=$(cat $GIT/config | grep -oP "(?<=$GH_USER/).*(?=.git)")
       REPO_TYPE=1
     else
       ## not my repo
@@ -43,6 +61,7 @@ for GIT in $ALL_GITS ; do
 
   elif [ $(cat $GIT/config | grep "gitlab" | wc -l) -eq 1 ] ; then
     ## gitlab repo
+    if [ $SHOW_SURREY -eq 0 ] ; then continue ; fi
     if [ $(cat $GIT/config | grep $GL_STAFFNAME | wc -l) -eq 1 ] ; then
       ## my repo
       REPO_NAME=$(cat $GIT/config | grep -oP "(?<=$GL_USERCODE/).*(?=.git)")
@@ -52,6 +71,11 @@ for GIT in $ALL_GITS ; do
       REPO_TYPE=0
       continue
     fi
+  fi
+
+  if [ $SEARCH -eq 1 ] ; then 
+    GREP=$(echo $REPO_NAME | grep "$TAG")
+    if [ $? -eq 1 ] ; then continue ; fi
   fi
 
   LAST=$(pwd)
