@@ -3,6 +3,7 @@
 source $MWSHPATH/colours.sh
 
 LOOP=0
+NO_ERRORS=0
 
 while test $# -gt 0; do
   case "$1" in
@@ -23,6 +24,10 @@ while test $# -gt 0; do
       OPEN_FILES=$OPEN_FILES" $1"
       shift
       ;;
+    -ne|--no-errors)
+      shift
+      NO_ERRORS=1
+      ;;
     -op2g|--open-pdb2gmx)
       shift
       OPEN_FILES=$OPEN_FILES" gromacs.pdb2gmx.log"
@@ -36,7 +41,7 @@ done
 if [ $# -eq 0 ]
 then 
   JOB_NUM=$(cat last_job)
-  echo -e $colWarning"Defaulted to last job: "$JOB_NUM"."$colClear
+  # echo -e $colWarning"Defaulted to last job: "$JOB_NUM"."$colClear
 else
   JOB_NUM=$1
 fi
@@ -77,8 +82,10 @@ do
   echo -e "\n"$colSuccess"Output file: "$O_FILE" [ "$O_LINES" lines ]"$colClear
   cat -n $O_FILE
 
-  echo -e "\n"$colError"Error file: "$E_FILE" [ "$E_LINES" lines ]"$colClear
-  cat -n $E_FILE
+  if [ $NO_ERRORS = 0 ] ; then
+    echo -e "\n"$colError"Error file: "$E_FILE" [ "$E_LINES" lines ]"$colClear
+    cat -n $E_FILE
+  fi
 
   if [ $LOOP -eq 0 ] ; then break ; fi
   
