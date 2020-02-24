@@ -18,7 +18,7 @@ function finishUp {
   if [[ -z ${SLURM_JOBID} ]] ; then exit $1 ; fi
   rm \#*
   mkdir ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}
-  cp * ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
+  cp -r * ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
   mv ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}.? ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
   exit $1
 }
@@ -79,10 +79,15 @@ function gmx_max {
         echo $GENION_GROUP | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
       fi
       ;;
-    energy|rms|trjconv|gyrate)
+    energy|trjconv|gyrate)
       VARIABLE=$1
       shift
       echo "$VARIABLE 0" | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+      ;;
+    rms)
+      VARIABLE=$1
+      shift
+      echo "$VARIABLE $VARIABLE" | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
       ;;
     *)
       gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
@@ -120,6 +125,11 @@ function xvg2png {
         -f2|--filename2)
           shift
           GPSTRING=$GPSTRING"filename2='$1';"
+          shift
+          ;;
+        -o|--output)
+          shift
+          GPSTRING=$GPSTRING"output='$1';"
           shift
           ;;
         -t1|--title1)
@@ -200,6 +210,6 @@ function xvg2png {
       esac
     done
   echo -ne $colBold"Plotting $PLOTFILE... "
-  gnuplot -e "$GPSTRING" xvg2png.gp > _gp$LOGNUM.log 2>&1
+  gnuplot -e "$GPSTRING" $MWGPTPATH/xvg2png.gp > _gp$LOGNUM.log 2>&1
   gmxRet $?
 }
