@@ -54,21 +54,27 @@ while test $# -gt 0; do
       shift
       ;;
     *)
-      break
+      # put tests for integer/string here:
+      ARG=$1
+      shift
+      if ! [[ $1 =~ '^[0-9]+$' ]] ; then
+        NOT_INTEGER=1
+      else
+        NOT_INTEGER=0
+      fi
       ;;
   esac
 done
 
 # check if argument is an integer:
 
-re='^[0-9]+$'
-if ! [[ $1 =~ $re ]] ; then
+if [ $NOT_INTEGER -eq 0 ] ; then
 
   # If a string is given then list all folders containing the tag
 
   # cd $HOME
 
-  STR=$(echo "$1" | awk '{print toupper($0)}')
+  STR=$(echo "$ARG" | awk '{print toupper($0)}')
 
   PWD_LAST=$(pwd)
   
@@ -93,7 +99,7 @@ else
 
   # if a working directory number is given attempt to change into that folder:
 
-  WD_NUM=$(printf "%05d\n" $1)
+  WD_NUM=$(printf "%05d\n" $ARG)
 
   # Check if the directory exists
   directoryExistsQuiet ~/WD_$WD_NUM*
