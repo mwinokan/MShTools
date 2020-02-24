@@ -81,7 +81,7 @@ for GIT in $ALL_GITS ; do
   LAST=$(pwd)
   cd $GIT/..
   GIT_STATUS=$(git status)
-  NUM_MOD=$(echo $GIT_STATUS | grep -o "modified" | wc -l)
+  NUM_MOD=$(echo $GIT_STATUS | grep -o "modified\|deleted" | wc -l)
   if [ $NUM_MOD -ne 0 ] ; then
     # there are modified files 
     STATUS=1
