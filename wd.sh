@@ -14,6 +14,7 @@ fi
 
 RETURN_PATH=0
 RETURN_DIR=0
+LAST_JOB=0
 
 # new argument switch
 
@@ -47,6 +48,10 @@ while test $# -gt 0; do
       ls -d WD_*
       cd $LAST
       return 0
+      ;;
+    -lj)
+      LAST_JOB=1
+      shift
       ;;
     *)
       break
@@ -97,6 +102,16 @@ else
   PWD_LAST=$(pwd)
   cd $HOME
   WD_DIR=$(ls -d WD_$WD_NUM*)
+  if [ $LAST_JOB -eq 1 ] ; then
+    fileExistsQuiet $WD_DIR/last_job
+    FIL_EX_RET=$?
+    if [ $FIL_EX_RET -eq 1 ] ; then
+      LJ_DIR=$(cat $WD_DIR/last_job)
+      WD_DIR="$WD_DIR/$LJ_DIR"
+    else
+      echo -e $colWarning"No "$colFile"last_job$colWarning file in $colFile$WD_DIR"$colClear
+    fi
+  fi
   cd $PWD_LAST
 
   if [ $DIR_EX_RET -eq 1 ] ; then
