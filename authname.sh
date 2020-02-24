@@ -66,7 +66,7 @@ function parseAuthList {
 
   for LAST in $LAST_NAMES; do
     INITS=$(echo $INITIALS | awk -v field="$COUNTER" '{print $field}')
-    echo "$INITS $LAST"
+    # echo "$INITS $LAST"
     AUTH_LIST=$AUTH_LIST"$INITS $LAST, "
     let COUNTER=COUNTER+1
   done
@@ -82,7 +82,7 @@ while read AUTH_LIST; do
   if [ $BIB_LESS -ne 1 ] ; then
     echo -ne "\033[1m"$(echo $BIB_NAMES | awk -v field="$COUNTER" '{print $field}')"\033[0m "
   fi
-  echo -e $(parseAuthList "$AUTH_LIST")
+  parseAuthList "$AUTH_LIST"
   let COUNTER=COUNTER+1
 
 done < .authname/authlists
