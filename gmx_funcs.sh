@@ -3,6 +3,7 @@
 ########### COLOURS
 
 source $MWSHPATH/colours.sh
+source $MWSHPATH/out.sh
 colBold="\033[1m"
 colHead="\033[1;4m"
 colClear="\033[0m"
@@ -119,11 +120,43 @@ function minimStats {
 }
 
 function xvg2png {
-  LOGNUM=$1
-  shift
   GPSTRING=""
     while test $# -gt 0; do
       case "$1" in
+        -h|--help)
+          echo -e "Usage for "$colFunc"xvg2png"$colClear":"
+
+          echo -e "\n""Basic:"
+          flagOut "-f|--filename" "<STRING>" "Plot <STRING>.xvg"
+          flagOut "-o|--output" "<STRING>" "Produce <STRING>.png"
+          flagOut "-xl|--xlabel" "<STRING>" "Set the x-label"
+          flagOut "-yl|--ylabel" "<STRING>" "Set the y-label"
+          flagOut "-xt|--xtics" "<FLOAT>" "Set the frequency of the x ticks"
+          flagOut "-yt|--ytics" "<FLOAT>" "Set the frequency of the y ticks"
+          flagOut "-xs|--xscientific" "" "Show the x-axis values in scientific format"
+          flagOut "-ys|--yscientific" "" "Show the y-axis values in scientific format"
+          flagOut "-xmin" "<FLOAT>" "Set the lower bound of the x-axis range"
+          flagOut "-xmax" "<FLOAT>" "Set the upper bound of the x-axis range"
+          flagOut "-ymin" "<FLOAT>" "Set the lower bound of the y-axis range"
+          flagOut "-ymax" "<FLOAT>" "Set the upper bound of the y-axis range"
+          flagOut "-l|--lognum" "<INTEGER>" "Set the logfile to '_gp<INTEGER>.log'"
+          
+          echo -e "\n""Two xvg's on the same axes:"
+          flagOut "-dp|--double-plot" "<STRING>" "Produce <STRING>.png"
+          flagOut "-f2|--filename2" "<STRING>" "Also plot <STRING>.xvg"
+          flagOut "-t1|--title1" "<STRING>" "Title for first datafile"
+          flagOut "-t2|--title2" "<STRING>" "Title for second datafile"
+          
+          echo -e "\n""Analysis:"
+          flagOut "-ra|--running-average" "" "Running average of last five data points"
+          flagOut "-cf|--constfit" "" "Fit y=c to the data"
+          flagOut "-fmin" "<FLOAT>" "Set the lower bound of the fitting range"
+          flagOut "-fmax" "<FLOAT>" "Set the upper bound of the fitting range"
+
+          # finishUp 0
+          return
+          exit
+          ;;
         -f|-f1|--filename|--filename1)
           shift
           PLOTFILE=$1
@@ -218,6 +251,11 @@ function xvg2png {
         -fmax|--fitmax)
           shift
           GPSTRING=$GPSTRING"fitmax=$1;"
+          shift
+          ;;
+        -l|--lognum)
+          shift
+          LOGNUM=$1
           shift
           ;;
         *)
