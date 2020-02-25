@@ -21,7 +21,7 @@
 ## Gromacs on EUREKA
 
 - `gmx_funcs.sh` includes several functions for calling Gromacs on EUREKA that you might find useful.
-    + `gmx_funcs.sh/xvg2png` Calls [MGnuPlots/xvg2png.gp](#http://www.github.com/mwinokan/MGnuPlots) to plot data in an XVG file.
+    + `gmx_funcs.sh/xvg2png` Calls [MGnuPlots/xvg2png.gp](#http://www.github.com/mwinokan/MGnuPlots) to plot data in an XVG file. See `xvg2png -h` for usage.
 
 # Installation
 

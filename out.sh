@@ -32,3 +32,13 @@ function returnOut {
 function errorOut {
   echo -e $colError"ERROR: "$1$colClear
 }
+
+# command line argument for usage:
+# -h <STRING> 
+function flagOut {
+  FLAG=$1
+  TYPE=$2
+  shift
+  shift
+  echo -e $colVarName$FLAG" "$colVarType$TYPE$colClear" "$@
+}
