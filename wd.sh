@@ -109,9 +109,6 @@ else
   DIR_EX_RET=$?
 
   if [ $DIR_EX_RET -eq 1 ] ; then
-
-    echo $RETURN_PATH
-    echo $RETURN_DIR
     
     PWD_LAST=$(pwd)
     cd $HOME
