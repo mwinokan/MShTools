@@ -18,6 +18,11 @@
 - `directory_exists.sh` provides functions to check if directories and files exist.
 - `authname.sh` parses `.bib` files.
 
+## Gromacs on EUREKA
+
+- `gmx_funcs.sh` includes several functions for calling Gromacs on EUREKA that you might find useful.
+    + `gmx_funcs.sh/xvg2png` Calls [MGnuPlots/xvg2png.gp](#http://www.github.com/mwinokan/MGnuPlots) to plot data in an XVG file.
+
 # Installation
 
   * To use these tools clone this repository and add the directory to your BASh `PATH` variable.
