@@ -100,7 +100,12 @@ for GIT in $ALL_GITS ; do
   if [ $STATUS -eq 0 ] ; then echo -e -n $colSuccess"No Modifications"$colClear ; fi
   if [ $STATUS -eq 1 ] ; then echo -e -n $colBold$NUM_MOD" Modified Files"$colClear ; fi
   if [ $SHORT -eq 0 ] ; then echo -e -n " Local: "; fi
-  if [ $SHORT -eq 0 ] ; then echo -e -n $colFile$GIT$colClear; fi
+  if [ $SHORT -eq 0 ] ; then 
+    HM="$HOME/"
+    LOCAL_DIR=$(echo -e $GIT | grep -oP '(?).*(?=/.git)')
+    LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
+    echo -e -n $colFile"~/$LOCAL_DIR"$colClear
+  fi
 
   if [ $REPO_TYPE -eq 1 ] ; then
 
