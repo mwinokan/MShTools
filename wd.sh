@@ -57,9 +57,12 @@ while test $# -gt 0; do
       # put tests for integer/string here:
       ARG=$1
       shift
-      if ! [[ $1 =~ '^[0-9]+$' ]] ; then
+      re='^[0-9]+$'
+      if ! [[ $ARG =~ $re ]] ; then
+        # echo $ARG "is not an integer"
         NOT_INTEGER=1
       else
+        # echo $ARG "is an integer"
         NOT_INTEGER=0
       fi
       ;;
@@ -68,7 +71,7 @@ done
 
 # check if argument is an integer:
 
-if [ $NOT_INTEGER -eq 0 ] ; then
+if [ $NOT_INTEGER -eq 1 ] ; then
 
   # If a string is given then list all folders containing the tag
 
@@ -105,22 +108,25 @@ else
   directoryExistsQuiet ~/WD_$WD_NUM*
   DIR_EX_RET=$?
 
-  PWD_LAST=$(pwd)
-  cd $HOME
-  WD_DIR=$(ls -d WD_$WD_NUM*)
-  if [ $LAST_JOB -eq 1 ] ; then
-    fileExistsQuiet $WD_DIR/last_job
-    FIL_EX_RET=$?
-    if [ $FIL_EX_RET -eq 1 ] ; then
-      LJ_DIR=$(cat $WD_DIR/last_job)
-      WD_DIR="$WD_DIR/$LJ_DIR"
-    else
-      echo -e $colWarning"No "$colFile"last_job$colWarning file in $colFile$WD_DIR"$colClear
-    fi
-  fi
-  cd $PWD_LAST
-
   if [ $DIR_EX_RET -eq 1 ] ; then
+
+    echo $RETURN_PATH
+    echo $RETURN_DIR
+    
+    PWD_LAST=$(pwd)
+    cd $HOME
+    WD_DIR=$(ls -d WD_$WD_NUM*)
+    if [ $LAST_JOB -eq 1 ] ; then
+      fileExistsQuiet $WD_DIR/last_job
+      FIL_EX_RET=$?
+      if [ $FIL_EX_RET -eq 1 ] ; then
+        LJ_DIR=$(cat $WD_DIR/last_job)
+        WD_DIR="$WD_DIR/$LJ_DIR"
+      else
+        echo -e $colWarning"No "$colFile"last_job$colWarning file in $colFile$WD_DIR"$colClear
+      fi
+    fi
+    cd $PWD_LAST
 
     if [ $RETURN_PATH -eq 1 ] ; then
 
