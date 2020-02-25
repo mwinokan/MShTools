@@ -15,12 +15,19 @@ function finishUp {
   else 
     echo -e $colError"Exiting $1"$colClear 
   fi
-  if [[ -z ${SLURM_JOBID} ]] ; then exit $1 ; fi
-  rm \#*
-  mkdir ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}
-  cp -r * ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
-  mv ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}.? ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
-  exit $1
+  if [[ -z ${SLURM_JOBID} ]] ; then
+    if [[ $- == *i* ]] ; then
+      return $1
+    else
+      exit $1
+    fi
+  else
+    rm \#*
+    mkdir ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}
+    cp -r * ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
+    mv ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}.? ${SLURM_SUBMIT_DIR}/${SLURM_JOBID}/
+    exit $1
+  fi
 }
 
 function gmxRet {
@@ -30,6 +37,7 @@ function gmxRet {
   else 
     echo -e $colError"$GMX_RET "$colClear$(/usr/bin/date)
   fi
+  
   if [ $GMX_RET -ne 0 ] ; then finishUp $THIS_SECTION; fi
 }
 
@@ -198,13 +206,23 @@ function xvg2png {
           GPSTRING=$GPSTRING"ymax=$1;"
           shift
           ;;
-        -cf|-constfit)
+        -cf|--constfit)
           shift
           GPSTRING=$GPSTRING"constfit=1;"
+          ;;
+        -fmin|--fitmin)
+          shift
+          GPSTRING=$GPSTRING"fitmin=$1;"
+          shift
+          ;;
+        -fmax|--fitmax)
+          shift
+          GPSTRING=$GPSTRING"fitmax=$1;"
           shift
           ;;
         *)
           echo -e $colError"Unrecognised flag: "$colArg$1$colClear
+          shift
           finishUp 2
           ;;
       esac
