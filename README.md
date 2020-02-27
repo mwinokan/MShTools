@@ -13,15 +13,21 @@
 - `submit.sh` submit a given script using `sbatch` on EUREKA's parallel scratch. (Currently private, awaiting update)
 - `sq_loop.sh` auto-refreshing list of all active jobs for a given user. (Intended for EUREKA)
 - `wd.sh` change to, list, and get paths to working directories that fit the pattern `~/WD_<NUMBER>_<TAGS>`. (Portable)
+- `djvu2pdf.sh` converts djvu files to pdf (Intended for EUREKA).
+- `usage.sh` shows your disk usage for $HOME & $PSCRATCH.
 
 ## Others
 - `directory_exists.sh` provides functions to check if directories and files exist.
 - `authname.sh` parses `.bib` files.
 
+## MacOS
+- `unmount.sh` Uses osascript to unmount external drives.
+
 ## Gromacs on EUREKA
 
 - `gmx_funcs.sh` includes several functions for calling Gromacs on EUREKA that you might find useful.
     + `gmx_funcs.sh/xvg2png` Calls [MGnuPlots/xvg2png.gp](#http://www.github.com/mwinokan/MGnuPlots) to plot data in an XVG file. See `xvg2png -h` for usage.
+- `load_gmx.sh` loads the necessary modules for Gromacs on EUREKA.
 
 # Installation
 

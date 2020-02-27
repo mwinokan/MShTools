@@ -1,5 +1,7 @@
 #!/bin/bash -u
 
+source $MWSHPATH/colours.sh
+
 # To-Do's
 
 # fancyOut <HEADER>
