@@ -54,8 +54,27 @@ done
 function convert4showtime {
   TIME=$1
   IFS=- read DAYS TIME <<< "$TIME"
-  IFS=: read HRS MIN SEC <<< "$TIME"
-  secs=$((10#$SEC + 60*10#$MIN + 3600*10#$HRS + 86400*10#$DAYS))
+  # echo $DAYS > debug
+  # echo $TIME >> debug
+  if [[ "$TIME" == "" ]] ; then
+    TIME=$DAYS
+    IFS=: read HRS MIN SEC <<< "$TIME"
+    if [[ "$SEC" == "" ]] ; then
+      if [[ "$MIN" == "" ]] ; then
+        SEC=$HRS
+        secs=$SEC
+      else
+        SEC=$MIN
+        MIN=$HRS
+        secs=$((10#$SEC + 60*10#$MIN))
+      fi
+    else
+      secs=$((10#$SEC + 60*10#$MIN + 3600*10#$HRS))
+    fi
+  else
+    IFS=: read HRS MIN SEC <<< "$TIME"
+    secs=$((10#$SEC + 60*10#$MIN + 3600*10#$HRS + 86400*10#$DAYS))
+  fi
   TIME=$(show_time $secs)
   echo -e $TIME
 }
@@ -96,6 +115,7 @@ function show_time () {
 
 function show_queue {
   QUEUE=$(squeue -l -u $USERCODE)
+  # echo "$QUEUE"
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
 
