@@ -163,20 +163,22 @@ function show_queue {
     fi
 
     QUEUE=$(squeue --start -u $USERCODE)
+    # echo $QUEUE
     JOBIDS=$(echo -e "$QUEUE" | grep "PD" | awk '{print $1}')
     for JOB in $JOBIDS; do
       PARTITION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $2}')
       NAME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $3}')
       NAME="'"$colVarName$NAME$colClear"'""${NAME_LINE:${#NAME}}"
       START_TIME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $6}')
-
+      NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $7}')
+      # NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
       REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
       
 
       if [ $SHORT -eq 1 ] ; then
         echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear
       else
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear "($colArg$PARTITION$colClear)"
+        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear " ($colArg$PARTITION$colClear)"
       fi
     done
   fi
