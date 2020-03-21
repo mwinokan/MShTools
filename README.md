@@ -11,7 +11,7 @@
 
 ## sbatch / EUREKA specific
 - `submit.sh` submit a given script using `sbatch` on EUREKA's parallel scratch. (Currently private, awaiting update)
-- `sq_loop.sh` auto-refreshing list of all active jobs for a given user. (Intended for EUREKA)
+- `sq.sh` pretty list of all active jobs for a given user. (Intended for EUREKA)
 - `wd.sh` change to, list, and get paths to working directories that fit the pattern `~/WD_<NUMBER>_<TAGS>`. (Portable)
 - `djvu2pdf.sh` converts djvu files to pdf (Intended for EUREKA).
 - `usage.sh` shows your disk usage for $HOME & $PSCRATCH.
@@ -35,5 +35,5 @@
   * Additionally add `export MWSHPATH=/path/to/sh` to your `.bash_profile`. 
   * Many scripts require Surrey and gitlab credentials. Create the files using `configure.sh`, see comments in script for information.
   * `wd` needs to be sourced to run, add the following alias to your `.bash_profile`: `alias wd='source $MWSHPATH/wd.sh'`
-  * You may prefer to define aliases for `newgit.sh`, `results.sh`, and `sq_loop.sh` - i.e. `alias newgit='bash $MWSHPATH/newgit.sh'`
+  * You may prefer to define aliases for `newgit.sh`, `results.sh`, and `sq.sh` - i.e. `alias newgit='bash $MWSHPATH/newgit.sh'`
   * Check individual scripts for dependencies.
