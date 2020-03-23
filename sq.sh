@@ -132,7 +132,7 @@ function show_queue {
 
   # running job summary
   if [ $nRUNNING -eq 0 ] ; then
-    echo -e $colSuccess"No jobs running."$colClear
+    echo -e $colSuccess"\nNo jobs running."$colClear
   else
     echo -e $colSuccess"\nRunning: $nRUNNING"$colClear
     if [ $HEADERS -eq 1 ] ; then
@@ -171,7 +171,7 @@ function show_queue {
 
   #pending job summary
   if [ $nPENDING -eq 0 ] ; then
-    echo -e $colError"No jobs pending."$colClear
+    echo -e $colError"\nNo jobs pending."$colClear
   else
     echo -e $colError"\nPending: $nPENDING"$colClear
     if [ $HEADERS -eq 1 ] ; then
@@ -209,7 +209,7 @@ if [ $LOOP -eq 1 ] ; then
   do
     clear
     show_queue
-    echo "Press [CTRL+C] to stop.."
+    echo -e "\nPress [CTRL+C] to stop.."
     sleep 0.5
   done
 else
