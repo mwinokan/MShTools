@@ -56,17 +56,20 @@ do
     if [ $(squeue -l -u $USERCODE | grep $JOBNUM | wc -l ) -eq 0 ] ; then
       LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
       if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
+      echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
+      ls --color=auto -xX $JOB_NUM
     else    
       echo -e $colBold"SLURM Queue"$colClear":"
       squeue -l -u $USERCODE
+      echo -e $colBold"\nFiles in "$colFile""$PSCRATCH/$JOB_NUM$colClear":"
+      ls --color=auto -xX $PSCRATCH/$JOB_NUM
     fi
   else
     LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
     if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
+    echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
+    ls --color=auto -xX $JOB_NUM
   fi
-
-  echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
-  ls --color=auto -xX $JOB_NUM
 
   CAT_TEST=$(cat $JOB_NUM.o 2>/dev/null)
   if [ $? -eq 0 ] ; then
