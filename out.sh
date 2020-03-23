@@ -35,6 +35,16 @@ function errorOut {
   echo -e $colError"ERROR: "$1$colClear
 }
 
+# warningOut <ERROR_MSG>
+function warningOut {
+  echo -e $colWarning"WARNING: "$1$colClear
+}
+
+# successOut <ERROR_MSG>
+function successOut {
+  echo -e $colSuccess$1$colClear
+}
+
 # command line argument for usage:
 # -h <STRING> 
 function flagOut {
