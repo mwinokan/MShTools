@@ -83,26 +83,78 @@ function gmx_max {
       if [[ -z $GENION_GROUP ]] ; then 
         echo -e $colClear
         gmx_mpi $COMMAND $@
+        GMX_RET=$?
         echo -ne $colBold
       else 
         echo $GENION_GROUP | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+        GMX_RET=$?
       fi
       ;;
-    energy|trjconv|gyrate)
+    gyrate)
       VARIABLE=$1
       shift
       echo "$VARIABLE 0" | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+      GMX_RET=$?
+      ;;
+    energy|trjconv)
+      if [[ "$1" == "-inter" ]] ; then 
+        shift
+        gmx_mpi $COMMAND $@
+        GMX_RET=$?
+      else
+        VARIABLE=$1
+        shift
+        echo "$VARIABLE 0" | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+        GMX_RET=$?
+      fi
       ;;
     rms)
       VARIABLE=$1
       shift
       echo "$VARIABLE $VARIABLE" | gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+      GMX_RET=$?
+      ;;
+    pdb2gmx)
+      while test $# -gt 0; do
+        case "$1" in
+          -2ter)
+            shift
+            TER1=$1
+            shift
+            TER2=$1
+            shift
+            echo "$TER1 $TER2" | gmx_mpi pdb2gmx $@ -ter > _$COMMAND$LOGNUM.log 2>&1
+            GMX_RET=$?
+            break
+            ;;
+          -nter)
+            shift
+            TERS="$1"
+            shift
+            echo """$TERS""" | gmx_mpi pdb2gmx $@ -ter > _$COMMAND$LOGNUM.log 2>&1
+            GMX_RET=$?
+            break
+            ;;
+          -inter)
+            shift
+            gmx_mpi pdb2gmx $@ -ter
+            GMX_RET=$?
+            break
+            ;;
+          *)
+            gmx_mpi pdb2gmx $@ > _$COMMAND$LOGNUM.log 2>&1
+            GMX_RET=$?
+            break
+            ;;
+        esac
+      done
       ;;
     *)
       gmx_mpi $COMMAND $@ > _$COMMAND$LOGNUM.log 2>&1
+      GMX_RET=$?
       ;;
   esac
-  gmxRet $?
+  gmxRet $GMX_RET
   return 0
 }
 
@@ -110,7 +162,79 @@ function gmx_max {
 
 function totalCharge {
   QTOT=$(grep qtot $1 | tail -n1 | grep -oP '(?<=qtot).*')
-  echo -e "Total charge = $QTOT"
+  echo -e  $colFile$2$colClear$colVarName" Total charge $colClear="$colResult"$QTOT"$colClear
+}
+
+function numAtomsInResidue {
+  nA=$(grep $1 $2 | wc -l)
+  return $nA
+}
+
+function groupStats {
+  nSys=$(grep "Group" $1 | grep " $2)" | grep -oP "(?<=has ).*(?= elements)")
+  varOut $2 $nSys atoms
+}
+
+function genionSummary {
+  nRep=$(grep "solute molecules in topology file" _genion*.log | sed "s/Replacing/Replaced/")
+  echo $nRep
+  # echo "Replaced "$nRep" with " $(grep -P "(?= by ).*(?=ions.)" _genion*.log)
+
+#   Processing topology
+# Replacing 46 solute molecules in topology file (topol.top)  by 46 NA and 0 CL ions.
+}
+
+function numAtomsInDNA {
+  numAtomsInResidue "DG" $1; nG=$?
+  numAtomsInResidue "DC" $1; nC=$?
+  numAtomsInResidue "DT" $1; nT=$?
+  numAtomsInResidue "DA" $1; nA=$?
+  let "nTot = $nG + $nC + $nT + $nA"
+  return $nTot
+}
+
+function numAtomsInProtein {
+  numAtomsInResidue "ALA" $1; nTot=$?
+  echo $nTot
+  numAtomsInResidue "CYS" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "ASP" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "GLU" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "PHE" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "GLY" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "HIS" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "ILE" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "LYS" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "LEU" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "MET" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "ASN" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "PRO" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "GLN" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "ARG" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "SER" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "THR" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "VAL" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "TRP" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  numAtomsInResidue "TYR" $1; let "nTot = $nTot + $?"
+  echo $nTot
+  return $nTot
 }
 
 function minimStats {
