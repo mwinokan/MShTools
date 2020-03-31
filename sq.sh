@@ -192,14 +192,22 @@ function show_queue {
       START_TIME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $6}')
       NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $7}')
       # NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
-      REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
-      
-
-      if [ $SHORT -eq 1 ] ; then
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear
+      echo $START_TIME
+      if [[ "$START_TIME" != "*N/A*" ]] ; then
+        REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
+        if [ $SHORT -eq 1 ] ; then
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear
+        else
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear " ($colArg$PARTITION$colClear)"
+        fi
       else
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear " ($colArg$PARTITION$colClear)"
+        if [ $SHORT -eq 1 ] ; then
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult
+        else
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"            ($colArg$PARTITION$colClear)"
+        fi
       fi
+
     done
   fi
 }
