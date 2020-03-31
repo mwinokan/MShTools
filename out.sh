@@ -45,12 +45,54 @@ function successOut {
   echo -e $colSuccess$1$colClear
 }
 
-# command line argument for usage:
-# -h <STRING> 
+# -f --flag <VAR> <VAR> Comment
 function flagOut {
-  FLAG=$1
-  TYPE=$2
-  shift
-  shift
-  echo -e $colVarName$FLAG" "$colVarType$TYPE$colClear" "$@
+  COUNT=0
+  FLAGS=1
+  while test $# -gt 0; do
+    let 'COUNT = COUNT + 1'
+    if [ $FLAGS -eq 1 ] ; then
+      # looking for flags
+      if ([[ $1 == -* ]] || [[ $1 == --* ]] ) ; then
+        # checking for flags
+        if [ $COUNT -gt 1 ] ; then echo -ne $colClear"| " ; fi # separator between flags
+        echo -ne $colVarName"$1"$colClear" " # write the flag
+        shift; continue
+      else
+        # no flag found, stop looking
+        FLAGS=0
+      fi
+    fi
+
+    if [ $# -eq 1 ] ; then
+      # last argument is a comment
+      echo -ne $colClear$1$colClear
+      shift; continue
+    fi
+
+    if [[ $1 == "<"*">" ]] ; then
+      echo -ne $colArg$1$colClear" "
+      shift; continue
+    fi
+
+    if [[ $1 == "["*"]" ]] ; then
+      echo -ne $colVarType$1$colClear" "
+      shift; continue
+    fi
+    
+    echo -ne $colBold$1$colClear" "
+    shift
+
+  done
+  echo ""
 }
+
+# # command line argument for usage:
+# # -h <STRING> 
+# function flagOut {
+#   FLAG=$1
+#   TYPE=$2
+#   shift
+#   shift
+#   echo -e $colVarName$FLAG" "$colVarType$TYPE$colClear" "$@
+# }
