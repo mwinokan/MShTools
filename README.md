@@ -15,6 +15,8 @@
 - `wd.sh` change to, list, and get paths to working directories that fit the pattern `~/WD_<NUMBER>_<TAGS>`. (Portable)
 - `djvu2pdf.sh` converts djvu files to pdf (Intended for EUREKA).
 - `usage.sh` shows your disk usage for $HOME & $PSCRATCH.
+- `send2access.sh` easily send files to a folder called 'fromEureka' on access.eps.surrey.ac.uk
+- `mod_run.sh` change the SBATCH comments in a run file easily.
 
 ## Others
 - `directory_exists.sh` provides functions to check if directories and files exist.
@@ -22,12 +24,6 @@
 
 ## MacOS
 - `unmount.sh` Uses osascript to unmount external drives.
-
-## Gromacs on EUREKA
-
-- `gmx_funcs.sh` includes several functions for calling Gromacs on EUREKA that you might find useful.
-    + `gmx_funcs.sh/xvg2png` Calls [MGnuPlots/xvg2png.gp](#http://www.github.com/mwinokan/MGnuPlots) to plot data in an XVG file. See `xvg2png -h` for usage.
-- `load_gmx.sh` loads the necessary modules for Gromacs on EUREKA.
 
 # Installation
 
