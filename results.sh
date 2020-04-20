@@ -60,7 +60,8 @@ do
       ls --color=auto -xX $JOB_NUM
     else    
       echo -e $colBold"SLURM Queue"$colClear":"
-      squeue -l -u $USERCODE
+      # squeue -l -u $USERCODE
+      sq.sh | grep $JOBNUM
       echo -e $colBold"\nFiles in "$colFile""$PSCRATCH/$JOB_NUM$colClear":"
       ls --color=auto -xX $PSCRATCH/$JOB_NUM
     fi
