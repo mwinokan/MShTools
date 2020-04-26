@@ -125,6 +125,11 @@ else
     fi
     cd $PWD_LAST
 
+    WD_VAR="WD"$ARG
+    printf -v $WD_VAR "$HOME/$WD_DIR"
+    export "${WD_VAR}"
+    # echo "${WD_VAR}"
+
     if [ $RETURN_PATH -eq 1 ] ; then
 
       echo $HOME/$WD_DIR
