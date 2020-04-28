@@ -18,7 +18,7 @@ while test $# -gt 0; do
       echo "surrey_staffname="$3";" >> .suppressed_gitlab
       echo "surrey_useremail="$2"@surrey.ac.uk;" >> .suppressed_gitlab
       echo "surrey_staffemail="$3"@surrey.ac.uk;" >> .suppressed_gitlab
-      echo "token="$6";" >> .suppressed_gitlab
+      echo "token="$4";" >> .suppressed_gitlab
       exit 0
       ;;
     *)
