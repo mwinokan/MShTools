@@ -36,22 +36,42 @@ while test $# -gt 0; do
   esac
 done
 
-ALL_GITS=$(find $HOME -name ".git" | sort)
+ALL_GITS=$(find $HOME -iname ".git" 2> /dev/null | sort)
+
+# echo -e "$ALL_GITS"
+echo -e "$ALL_GITS" > __temp__
+
+# while IFS= read -r LINE; do
+#   echo "<A>""$LINE""</A>"
+# done < "__temp__"
+
+# for GIT in $ALL_GITS ; do
+#   echo "_a_"$GIT"_a_"
+#   echo "_b_""$GIT""_b_"
+# done
+# for GIT in "$ALL_GITS" ; do
+#   echo "_c_"$GIT"_c_"
+#   echo "_d_""$GIT""_d_"
+# done
+
+# exit
 
 GH_USER=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_github)
 GH_EMAIL=$(grep -oP "(?<=email=).*(?=;)" $MWSHPATH/.suppressed_github)
 GL_USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 GL_STAFFNAME=$(grep -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 
-for GIT in $ALL_GITS ; do
+while IFS= read -r GIT; do
+# for GIT in $ALL_GITS ; do
 
   # grep -P "(?<=$GH_USER/).*(?=.git)" $GIT/config
-  if [ $(cat $GIT/config | grep "github" | wc -l) -eq 1 ] ; then
+  if [ $(cat "$GIT/config" | grep "github" | wc -l) -eq 1 ] ; then
     ## github repo
+    # cat "$GIT/config"
     if [ $SHOW_GITHUB -eq 0 ] ; then continue ; fi
-    if [ $(cat $GIT/config | grep $GH_USER | wc -l) -eq 1 ] ; then
+    if [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -eq 1 ] ; then
       ## my repo
-      REPO_NAME=$(cat $GIT/config | grep -oP "(?<=$GH_USER/).*(?=.git)")
+      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
       REPO_TYPE=1
     else
       ## not my repo
@@ -59,12 +79,12 @@ for GIT in $ALL_GITS ; do
       continue
     fi
 
-  elif [ $(cat $GIT/config | grep "gitlab" | wc -l) -eq 1 ] ; then
+  elif [ $(cat "$GIT/config" | grep "gitlab" | wc -l) -eq 1 ] ; then
     ## gitlab repo
     if [ $SHOW_SURREY -eq 0 ] ; then continue ; fi
-    if [ $(cat $GIT/config | grep $GL_STAFFNAME | wc -l) -eq 1 ] ; then
+    if [ $(cat "$GIT/config" | grep $GL_STAFFNAME | wc -l) -eq 1 ] ; then
       ## my repo
-      REPO_NAME=$(cat $GIT/config | grep -oP "(?<=$GL_USERCODE/).*(?=.git)")
+      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GL_USERCODE/).*(?=.git)")
       REPO_TYPE=2
     else
       ## not my repo
@@ -79,7 +99,7 @@ for GIT in $ALL_GITS ; do
   fi
 
   LAST=$(pwd)
-  cd $GIT/..
+  cd "$GIT"/..
   GIT_STATUS=$(git status)
   NUM_MOD=$(echo $GIT_STATUS | grep -o "modified\|deleted" | wc -l)
   if [ $NUM_MOD -ne 0 ] ; then
@@ -88,9 +108,9 @@ for GIT in $ALL_GITS ; do
   else
     STATUS=0
   fi
-
-  NAME_LINE='                                           '
-  # NAME_LINE='-------------------------------------------'
+             # WD_00013_P1A_HELICASE_DNA_ASE_GMX
+  NAME_LINE='                                  '
+  # NAME_LINE='----------------------------------'
   
   if [ $SHORT -eq 0 ] ; then echo -e -n "Repo: "; fi
   # echo -e -n $colFunc$REPO_NAME$colClear" "
@@ -102,7 +122,7 @@ for GIT in $ALL_GITS ; do
   if [ $SHORT -eq 0 ] ; then echo -e -n " Local: "; fi
   if [ $SHORT -eq 0 ] ; then 
     HM="$HOME/"
-    LOCAL_DIR=$(echo -e $GIT | grep -oP '(?).*(?=/.git)')
+    LOCAL_DIR=$(echo -e "$GIT" | grep -oP '(?).*(?=/.git)')
     LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
     echo -e -n $colFile"~/$LOCAL_DIR"$colClear
   fi
@@ -129,4 +149,8 @@ for GIT in $ALL_GITS ; do
 
   echo -e $colClear
 
-done
+# done
+
+done < "__temp__"
+
+rm -f __temp__*
