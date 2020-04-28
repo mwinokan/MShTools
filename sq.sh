@@ -204,7 +204,7 @@ function show_queue {
         if [ $SHORT -eq 1 ] ; then
           echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult
         else
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"            ($colArg$PARTITION$colClear)"
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$colClear"            ($colArg$PARTITION$colClear)"
         fi
       fi
 
