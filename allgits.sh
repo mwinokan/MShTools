@@ -145,7 +145,7 @@ while IFS= read -r GIT; do
     fi
   fi
   
-  cd $LAST
+  cd "$LAST"
 
   echo -e $colClear
 
