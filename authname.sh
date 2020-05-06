@@ -56,7 +56,7 @@ function parseAuthList {
 
   INPUT="and $INPUT and"
 
-  LAST_NAMES=$(echo "$INPUT" | grep -oP "(?<=and).*?(?=,)")
+  echo "$INPUT" | grep -oP "(?<=and).*?(?=,)" > .authname/lastnames
 
   FIRST_NAMES=$(echo "$INPUT" | grep -oP "(?<=,).*?(?=and)")
   INITIALS=$(echo -e "$FIRST_NAMES" | sed -e 's/$/ /' -e 's/\([^ ]\)[^ ]* /\1/g' -e 's/^ *//')
@@ -64,25 +64,25 @@ function parseAuthList {
   COUNTER=1
   AUTH_LIST=""
 
-  for LAST in $LAST_NAMES; do
+  while read -r LAST; do
     INITS=$(echo $INITIALS | awk -v field="$COUNTER" '{print $field}')
     # echo "$INITS $LAST"
     AUTH_LIST=$AUTH_LIST"$INITS $LAST, "
     let COUNTER=COUNTER+1
-  done
+  done < .authname/lastnames
 
   AUTH_LIST=$(echo $AUTH_LIST | grep -oP ".*(?=,)")
   echo $AUTH_LIST 
 }
 
-COUNTER=1
+COUNTER2=1
 
-while read AUTH_LIST; do
+while read -r AUTH_LIST; do
 
   if [ $BIB_LESS -ne 1 ] ; then
-    echo -ne "\033[1m"$(echo $BIB_NAMES | awk -v field="$COUNTER" '{print $field}')"\033[0m "
+    echo -ne "\033[1m"$(echo "$BIB_NAMES" | awk -v field="$COUNTER2" '{print $field}')"\033[0m "
   fi
   parseAuthList "$AUTH_LIST"
-  let COUNTER=COUNTER+1
+  let 'COUNTER2=COUNTER2+1'
 
 done < .authname/authlists
