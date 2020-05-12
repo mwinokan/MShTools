@@ -39,13 +39,13 @@ while test $# -gt 0; do
       shift
       ;;
     -l)
-      cd $(ls -d ~/WD_* | tail -n 1)
+      cd $(/usr/bin/ls -d ~/WD_* | tail -n 1)
       return 0
       ;;
     -a)
       LAST=$(pwd)
       cd
-      ls -d WD_*
+      /usr/bin/ls -d WD_*
       cd $LAST
       return 0
       ;;
@@ -83,7 +83,7 @@ if [ $NOT_INTEGER -eq 1 ] ; then
   
   cd $HOME
 
-  LS_RESULT=$(ls -d WD_**$STR* 2>/dev/null)
+  LS_RESULT=$(/usr/bin/ls -d WD_**$STR* 2>/dev/null)
 
   cd $PWD_LAST
 
@@ -108,11 +108,16 @@ else
   directoryExistsQuiet ~/WD_$WD_NUM*
   DIR_EX_RET=$?
 
+
   if [ $DIR_EX_RET -eq 1 ] ; then
     
     PWD_LAST=$(pwd)
     cd $HOME
-    WD_DIR=$(ls -d WD_$WD_NUM*)
+    WD_DIR=$(/usr/bin/ls -d WD_$WD_NUM*)
+
+    echo $WD_DIR
+    return 0
+
     if [ $LAST_JOB -eq 1 ] ; then
       fileExistsQuiet $WD_DIR/last_job
       FIL_EX_RET=$?
