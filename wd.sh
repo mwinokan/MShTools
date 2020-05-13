@@ -108,15 +108,14 @@ else
   directoryExistsQuiet ~/WD_$WD_NUM*
   DIR_EX_RET=$?
 
-
   if [ $DIR_EX_RET -eq 1 ] ; then
     
     PWD_LAST=$(pwd)
     cd $HOME
     WD_DIR=$(/usr/bin/ls -d WD_$WD_NUM*)
 
-    echo $WD_DIR
-    return 0
+    # echo $WD_DIR
+    # return 0
 
     if [ $LAST_JOB -eq 1 ] ; then
       fileExistsQuiet $WD_DIR/last_job
