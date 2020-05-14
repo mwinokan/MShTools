@@ -226,7 +226,11 @@ function show_queue {
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
     sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
 
-    echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
+    if [ $SHORT -eq 0 ] ; then
+      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
+    else
+      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear"
+    fi
 
     while read -r LINE; do
       JOB_ID=$(echo $LINE | awk '{print $1}')
@@ -258,7 +262,11 @@ function show_queue {
       ELAPSED=$(convert4showtime $ELAPSED)
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
 
-      echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+      if [ $SHORT -eq 0 ] ; then
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+      else
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
+      fi
     done < __temp__
   fi
 
