@@ -217,13 +217,13 @@ function show_queue {
     done
   fi
 
+  # Previous jobs  
   if [ $SHOW_PREV_NUM -gt 0 ] ; then
-    # Previous jobs  
     echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs:"$colClear
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
 
     echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
 
@@ -250,11 +250,14 @@ function show_queue {
 
       START=$(date --date="$START" "+%b %-d`DaySuffix` %R")
 
+      START_LINE="              "
+      START=$START${START_LINE:${#START}}
+
       JOB_NAME="'"$colVarName$JOB_NAME$colClear"'""${NAME_LINE:${#JOB_NAME}}"
       ELAPSED=$(convert4showtime $ELAPSED)
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
 
-      echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult$START $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+      echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
     done < __temp__
   fi
 
