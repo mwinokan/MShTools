@@ -15,7 +15,9 @@ while test $# -gt 0; do
       echo -e $colArg"-l"$colClear" loop indefinitely"
       echo -e $colArg"-i"$colClear" cluster info (sinfo)"
       echo -e $colArg"-s"$colClear" short output"
-      echo -e $colArg"-s"$colClear" show headers"
+      echo -e $colArg"-nh"$colClear" don't show headers"
+      echo -e $colArg"-p <N>"$colClear" show previous N jobs, default is 5"
+      echo -e $colArg"-u <USER>"$colClear" show USER's queue"
       exit 1
       ;;
     -l)
@@ -159,7 +161,6 @@ function show_queue {
 
       TIME=$(convert4showtime $TIME)
       LIMIT=$(convert4showtime $LIMIT)
-
 
       # TIME=${TIME_LINE:${#TIME}}$TIME
       # LIMIT=${TIME_LINE:${#LIMIT}}$LIMIT
