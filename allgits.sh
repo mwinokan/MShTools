@@ -64,6 +64,10 @@ GL_STAFFNAME=$(grep -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 while IFS= read -r GIT; do
 # for GIT in $ALL_GITS ; do
 
+  if [[ ! -d $GIT ]] ; then
+    continue
+  fi
+
   # grep -P "(?<=$GH_USER/).*(?=.git)" $GIT/config
   if [ $(cat "$GIT/config" | grep "github" | wc -l) -eq 1 ] ; then
     ## github repo
