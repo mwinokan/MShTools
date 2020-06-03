@@ -6,6 +6,7 @@ LOOP=0
 SHORT=0
 HEADERS=1
 USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+SHOW_PREV_NUM=5
 
 while test $# -gt 0; do
   case "$1" in
@@ -14,7 +15,9 @@ while test $# -gt 0; do
       echo -e $colArg"-l"$colClear" loop indefinitely"
       echo -e $colArg"-i"$colClear" cluster info (sinfo)"
       echo -e $colArg"-s"$colClear" short output"
-      echo -e $colArg"-s"$colClear" show headers"
+      echo -e $colArg"-nh"$colClear" don't show headers"
+      echo -e $colArg"-p <N>"$colClear" show previous N jobs, default is 5"
+      echo -e $colArg"-u <USER>"$colClear" show USER's queue"
       exit 1
       ;;
     -l)
@@ -42,6 +45,11 @@ while test $# -gt 0; do
       shift
       sinfo
       exit
+      ;;
+    -p)
+      shift
+      SHOW_PREV_NUM=$1
+      shift
       ;;
     *)
       echo -e $colError"Unknown flag: "$colArg$1$colClear
@@ -154,7 +162,6 @@ function show_queue {
       TIME=$(convert4showtime $TIME)
       LIMIT=$(convert4showtime $LIMIT)
 
-
       # TIME=${TIME_LINE:${#TIME}}$TIME
       # LIMIT=${TIME_LINE:${#LIMIT}}$LIMIT
       TIME_STRING="$TIME ($LIMIT)"
@@ -210,6 +217,101 @@ function show_queue {
 
     done
   fi
+
+  # Previous jobs  
+  if [ $SHOW_PREV_NUM -gt 0 ] ; then
+    echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs:"$colClear
+    
+    LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
+    # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
+
+    if [ $SHORT -eq 0 ] ; then
+      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
+    else
+      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear"
+    fi
+
+    while read -r LINE; do
+      JOB_ID=$(echo $LINE | awk '{print $1}')
+      JOB_NAME=$(echo $LINE | awk '{print $2}')
+      PARTITION=$(echo $LINE | awk '{print $3}')
+      STATUS=$(echo $LINE | awk '{print $4}')
+      START=$(echo $LINE | awk '{print $5}')
+      ELAPSED=$(echo $LINE | awk '{print $6}')
+      MAX_TIME=$(echo $LINE | awk '{print $7}')
+      NUM_NODES=$(echo $LINE | awk '{print $8}')
+      NODES=$(echo $LINE | awk '{print $9}')
+
+      if [[ $STATUS == "COMPLETED" ]] ; then
+        ELAPSED_COLOR=$colSuccess
+      elif [[ $STATUS == "CANCELLED"* ]] ; then
+        ELAPSED_COLOR=$colWarning
+      elif [[ $STATUS == "FAILED" ]] ; then
+        ELAPSED_COLOR=$colError
+      else
+        ELAPSED_COLOR=$colResult
+      fi
+
+      START=$(date --date="$START" "+%b %-d`DaySuffix` %R")
+
+      START_LINE="              "
+      START=$START${START_LINE:${#START}}
+
+      JOB_NAME="'"$colVarName$JOB_NAME$colClear"'""${NAME_LINE:${#JOB_NAME}}"
+      ELAPSED=$(convert4showtime $ELAPSED)
+      STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
+
+      if [ $SHORT -eq 0 ] ; then
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+      else
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
+      fi
+    done < __temp__
+  fi
+
+  rm __temp__* 2> /dev/null
+}
+
+# https://stackoverflow.com/questions/2495459/formatting-the-date-in-unix-to-include-suffix-on-day-st-nd-rd-and-th
+DaySuffix() {
+    if [ "x`date +%-d | cut -c2`x" = "xx" ]
+    then
+        DayNum=`date +%-d`
+    else
+        DayNum=`date +%-d | cut -c2`
+    fi
+
+    CheckSpecialCase=`date +%-d`
+    case $DayNum in
+    0 )
+      echo "th" ;;
+    1 )
+      if [ "$CheckSpecialCase" = "11" ]
+      then
+        echo "th"
+      else
+        echo "st"
+      fi ;;
+    2 )
+      if [ "$CheckSpecialCase" = "12" ]
+      then
+        echo "th"
+      else
+        echo "nd"
+      fi ;;
+    3 )
+      if [ "$CheckSpecialCase" = "13" ]
+      then
+        echo "th"
+      else
+        echo "rd"
+      fi ;;
+    [4-9] )
+      echo "th" ;;
+    * )
+      return 1 ;;
+    esac
 }
 
 if [ $LOOP -eq 1 ] ; then
@@ -218,7 +320,7 @@ if [ $LOOP -eq 1 ] ; then
     clear
     show_queue
     echo -e "\nPress [CTRL+C] to stop.."
-    sleep 0.5
+    sleep 1.0
   done
 else
   show_queue
