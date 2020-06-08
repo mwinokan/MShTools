@@ -2,6 +2,10 @@
 
 POSTSCRIPT=0
 
+# echo $@
+
+QUALITY=100
+
 while test $# -gt 0; do
   case "$1" in
     -f|--file)
@@ -38,16 +42,20 @@ while test $# -gt 0; do
   esac
 done
 
+if [[ -z $OUT ]] ; then
+  errorOut "No output specified"
+  exit 2
+fi
 
 if [ $POSTSCRIPT -eq 1 ] ; then
-  module -expert load Ghostscript
-  module -expert load libjpeg-turbo/1.5.1-intel-2017a
-  module -expert load LibTIFF/4.0.7-intel-2017a
+  module --expert load Ghostscript
+  module --expert load libjpeg-turbo/1.5.1-intel-2017a
+  module --expert load LibTIFF/4.0.7-intel-2017a
 
   djvups $STRING $FILE | ps2pdf - $OUT
 else
-  module -expert load libjpeg-turbo/1.5.1-intel-2017a
-  module -expert load LibTIFF/4.0.7-intel-2017a
+  module --expert load libjpeg-turbo/1.5.1-intel-2017a
+  module --expert load LibTIFF/4.0.7-intel-2017a
 
   ddjvu -format=pdf -quality=$QUALITY $STRING $FILE $OUT
 fi
