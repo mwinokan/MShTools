@@ -224,7 +224,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
@@ -248,6 +248,8 @@ function show_queue {
       elif [[ $STATUS == "CANCELLED"* ]] ; then
         ELAPSED_COLOR=$colWarning
       elif [[ $STATUS == "FAILED" ]] ; then
+        ELAPSED_COLOR=$colError
+      elif [[ $STATUS == "TIMEOUT" ]] ; then
         ELAPSED_COLOR=$colError
       else
         ELAPSED_COLOR=$colResult
