@@ -36,6 +36,10 @@ while test $# -gt 0; do
         s|share|shared)
           sed -i.bak "/#SBATCH/ s/--partition=debug_latest/--partition=shared/" $SCRIPT
           sed -i.bak "/#SBATCH/ s/--time=00-00:60:00/--time=01-00:00:00/" $SCRIPT
+          sed -i.bak "/#SBATCH/ s/--time=00-01:00:00/--time=01-00:00:00/" $SCRIPT
+          sed -i.bak "/#SBATCH/ s/--time=01:00:00/--time=01-00:00:00/" $SCRIPT
+          sed -i.bak "/#SBATCH/ s/--time=00:60:00/--time=01-00:00:00/" $SCRIPT
+          sed -i.bak "/#SBATCH/ s/--time=60:00/--time=01-00:00:00/" $SCRIPT
           successOut "Changed partition to $colArg""shared"$colClear
           ;;
         *)
