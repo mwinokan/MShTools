@@ -152,6 +152,21 @@ while IFS= read -r GIT; do
     LOCAL_DIR=$(echo -e "$GIT" | grep -oP '(?).*(?=/.git)')
     LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
     echo -e -n $colFile"~/$LOCAL_DIR"$colClear
+  else
+    HM="$HOME/"
+    LOCAL_DIR=$(echo -e "$GIT" | grep -oP '(?).*(?=/.git)')
+    LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
+    if [[ $LOCAL_DIR == "WD_"* ]] ; then
+
+      IFS='_' # hyphen (-) is set as delimiter
+      read -ra ADDR <<< "$LOCAL_DIR" # str is read into an array as tokens separated by IFS
+      IFS=' ' # space is set as delimiter
+
+      WD_NUM="${ADDR[1]}"
+      WD_NUM=$(echo $WD_NUM | sed 's/^0*//')
+
+      echo -e -n $colFile" \$(wd $WD_NUM)"$colClear
+    fi
   fi
 
   # If its a github repo we can find out more:
