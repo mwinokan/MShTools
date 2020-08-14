@@ -93,7 +93,10 @@ while IFS= read -r GIT; do
       # sublime $GIT/config
       
       # REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
-      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=https://github.com/$GH_USER/).*")
+      # REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*")
+      URL=$(cat "$GIT/config" | grep -oP "(?<=url\ \=\ ).*")
+      REPO_NAME=$(basename $URL .git)
+
       REPO_TYPE=1
     else
       ## not my repo
