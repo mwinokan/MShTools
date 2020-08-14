@@ -230,7 +230,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
@@ -240,9 +240,17 @@ function show_queue {
 
     while read -r LINE; do
       JOB_ID=$(echo $LINE | awk '{print $1}')
+      if [[ $JOB_ID == *".0" ]] ; then
+        continue
+      fi
       JOB_NAME=$(echo $LINE | awk '{print $2}')
       PARTITION=$(echo $LINE | awk '{print $3}')
       STATUS=$(echo $LINE | awk '{print $4}')
+      if [[ $JOB_NAME == "bash" ]] ; then
+        if [[ $STATUS != "CANCELLED+" ]] ; then
+          STATUS="TERMINATED"
+        fi
+      fi
       START=$(echo $LINE | awk '{print $5}')
       ELAPSED=$(echo $LINE | awk '{print $6}')
       MAX_TIME=$(echo $LINE | awk '{print $7}')
@@ -251,7 +259,10 @@ function show_queue {
 
       if [[ $STATUS == "COMPLETED" ]] ; then
         ELAPSED_COLOR=$colSuccess
-      elif [[ $STATUS == "CANCELLED"* ]] ; then
+      elif [[ $STATUS == "CANCELLED+" ]] ; then
+        ELAPSED_COLOR=$colWarning
+        STATUS="CANCELLED"
+      elif [[ $STATUS == "CANCELLED" ]] ; then
         ELAPSED_COLOR=$colWarning
       elif [[ $STATUS == "FAILED" ]] ; then
         ELAPSED_COLOR=$colError
@@ -271,7 +282,11 @@ function show_queue {
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
 
       if [ $SHORT -eq 0 ] ; then
-        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+        if [[ $ELAPSED == "" ]] ; then
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" before allocation"$colClear
+        else
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+        fi
       else
         echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
       fi
