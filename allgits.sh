@@ -53,7 +53,6 @@ while test $# -gt 0; do
   esac
 done
 
-# Check for suppressed user info
 if [[ ! -e $MWSHPATH/.suppressed_github || ! -e $MWSHPATH/.suppressed_gitlab ]] ; then
   errorOut "Could not locate $MWSHPATH/.suppressed_git??b"
   errorOut "Remember to setup MShTools using $colFunc""configure.sh"
@@ -75,18 +74,26 @@ echo -e "$ALL_GITS" > __temp__
 # Loop through all .git paths
 while IFS= read -r GIT; do
 
+  # echo -e $colBold $GIT $colClear
+
   # If its not a directory, skip
   if [[ ! -d $GIT ]] ; then continue ; fi
 
-  if [ $(cat "$GIT/config" | grep "github" | wc -l) -eq 1 ] ; then
+  if [ $(cat "$GIT/config" | grep "github" | wc -l) -gt 0 ] ; then
     ## github repo
 
     if [ $SHOW_GITHUB -eq 0 ] ; then continue ; fi
-    
-    if [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -eq 1 ] ; then
+
+    # echo -e $colBold $GIT $colClear
+
+    if [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -gt 0 ] ; then
       ## my repo
+
+      # echo -e $colBold"X"$GH_USER"X"$colClear
+      # sublime $GIT/config
       
-      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
+      # REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
+      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=https://github.com/$GH_USER/).*")
       REPO_TYPE=1
     else
       ## not my repo
@@ -95,15 +102,21 @@ while IFS= read -r GIT; do
       continue
     fi
 
-  elif [ $(cat "$GIT/config" | grep "gitlab" | wc -l) -eq 1 ] ; then
+  elif [ $(cat "$GIT/config" | grep "gitlab" | wc -l) -gt 0 ] ; then
     ## gitlab repo
 
     if [ $SHOW_SURREY -eq 0 ] ; then continue ; fi
 
-    if [ $(cat "$GIT/config" | grep $GL_STAFFNAME | wc -l) -eq 1 ] ; then
+    # sublime $GIT/config
+    if [ $(cat "$GIT/config" | grep $GL_STAFFNAME | wc -l) -gt 0 ] ; then
       ## my repo
 
       REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GL_USERCODE/).*(?=.git)")
+      REPO_TYPE=2
+    elif [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -gt 0 ] ; then
+      ## my repo
+
+      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
       REPO_TYPE=2
     else
       ## not my repo
