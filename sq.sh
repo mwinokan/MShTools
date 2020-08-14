@@ -5,7 +5,13 @@ source $MWSHPATH/colours.sh
 LOOP=0
 SHORT=0
 HEADERS=1
-USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+
+if [[ $(hostname) == *scarf* ]] ; then
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_scarf)
+else
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+fi
+
 SHOW_PREV_NUM=5
 
 while test $# -gt 0; do

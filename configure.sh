@@ -21,6 +21,12 @@ while test $# -gt 0; do
       echo "token="$4";" >> .suppressed_gitlab
       exit 0
       ;;
+    --configure-scarf)
+      echo "# Suppressed Information Do Not Distribute" > .suppressed_gitlab
+      shift
+      echo "user="$1";" >> .suppressed_scarf
+      exit 0
+      ;;
     *)
       break
       ;;
