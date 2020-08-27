@@ -230,7 +230,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra" | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
@@ -240,13 +240,23 @@ function show_queue {
 
     while read -r LINE; do
       JOB_ID=$(echo $LINE | awk '{print $1}')
-      if [[ $JOB_ID == *".0" ]] ; then
-        continue
-      fi
+      # if [[ $JOB_ID == *"."? ]] ; then
+      #   continue
+      # fi
       JOB_NAME=$(echo $LINE | awk '{print $2}')
       PARTITION=$(echo $LINE | awk '{print $3}')
       STATUS=$(echo $LINE | awk '{print $4}')
       if [[ $JOB_NAME == "bash" ]] ; then
+        if [[ $STATUS != "CANCELLED+" ]] ; then
+          STATUS="TERMINATED"
+        fi
+      fi
+      if [[ $JOB_NAME == "*.sh" ]] ; then
+        if [[ $STATUS != "CANCELLED+" ]] ; then
+          STATUS="TERMINATED"
+        fi
+      fi
+      if [[ $JOB_NAME == "sh" ]] ; then
         if [[ $STATUS != "CANCELLED+" ]] ; then
           STATUS="TERMINATED"
         fi
