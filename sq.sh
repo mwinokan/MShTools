@@ -65,11 +65,10 @@ while test $# -gt 0; do
   esac
 done
 
+
 function convert4showtime {
   TIME=$1
   IFS=- read DAYS TIME <<< "$TIME"
-  # echo $DAYS > debug
-  # echo $TIME >> debug
   if [[ "$TIME" == "" ]] ; then
     TIME=$DAYS
     IFS=: read HRS MIN SEC <<< "$TIME"
@@ -117,7 +116,6 @@ function show_time () {
   else
       ((sec=num))
   fi
-  # echo "$day"d "$hour"h "$min"m "$sec"s
 
   TIME_STRING=""
   if [ $day -ne 0 ]; then TIME_STRING="$day""d "; fi
@@ -128,12 +126,22 @@ function show_time () {
 }
 
 function show_queue {
+  # Header strings
+  HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear" "
+  HDR_PART_NODES="("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
+  HDR_ELAPSED=$colResult$colUnderline"Elapsed$colClear"
+  HDR_PART="("$colArg$colUnderline"partition$colClear)"
+  HDR_LIMIT=$colResult$colUnderline"(Limit)$colClear "
+
+  # get the queue and number of jobs
   QUEUE=$(squeue -l -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
 
+  # output
   echo -e $colBold$USERCODE"'s queue"$colClear
 
+  # blank lines for padding
   NAME_LINE='        '
   TIME_LINE="              "
   LIMIT_LINE="     "
@@ -145,9 +153,9 @@ function show_queue {
     echo -e $colSuccess"\nRunning: $nRUNNING"$colClear
     if [ $HEADERS -eq 1 ] ; then
       if [ $SHORT -eq 0 ] ; then
-        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Elapsed$colClear        "$colResult$colUnderline"(Limit)$colClear ("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
+        echo -e "\n""$HDR_JOBID_NAME_NODES""$HDR_ELAPSED""        ""$HDR_LIMIT""$HDR_PART_NODES"
       else
-        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Elapsed$colClear"
+        echo -e "\n""$HDR_JOBID_NAME_NODES""$HDR_ELAPSED"
       fi
     fi
     JOBIDS=$(echo -e "$QUEUE" |  grep "RUNNING" | awk '{print $1}')
@@ -185,9 +193,9 @@ function show_queue {
     echo -e $colError"\nPending: $nPENDING"$colClear
     if [ $HEADERS -eq 1 ] ; then
       if [ $SHORT -eq 0 ] ; then
-        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Approx. Start$colClear  ("$colArg$colUnderline"partition$colClear)"
+        echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Approx. Start$colClear  ""$HDR_PART"
       else
-        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Approx. Start$colClear"
+        echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Approx. Start$colClear"
       fi
     fi
 
@@ -226,16 +234,13 @@ function show_queue {
     sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
-      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
+      echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
     else
-      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear"
+      echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear"
     fi
 
     while read -r LINE; do
       JOB_ID=$(echo $LINE | awk '{print $1}')
-      # if [[ $JOB_ID == *"."? ]] ; then
-      #   continue
-      # fi
       JOB_NAME=$(echo $LINE | awk '{print $2}')
       PARTITION=$(echo $LINE | awk '{print $3}')
       STATUS=$(echo $LINE | awk '{print $4}')
@@ -275,7 +280,7 @@ function show_queue {
         ELAPSED_COLOR=$colResult
       fi
 
-      START=$(date --date="$START" "+%b %-d`DaySuffix` %R")
+      START=$(date --date="$START" "+%b %-d`DaySuffix $START` %R")
 
       START_LINE="              "
       START=$START${START_LINE:${#START}}
@@ -305,14 +310,18 @@ function show_queue {
 
 # https://stackoverflow.com/questions/2495459/formatting-the-date-in-unix-to-include-suffix-on-day-st-nd-rd-and-th
 DaySuffix() {
-    if [ "x`date +%-d | cut -c2`x" = "xx" ]
+    START=$1
+    DAYNUM=$(date --date="$START" +%-d)
+    DAYNUM_CUT2=$(date --date="$START" +%-d | cut -c2)
+
+    if [ "x""$DAYNUM_CUT2""x" = "xx" ]
     then
-        DayNum=`date +%-d`
+        DayNum="$DAYNUM"
     else
-        DayNum=`date +%-d | cut -c2`
+        DayNum="$DAYNUM_CUT2"
     fi
 
-    CheckSpecialCase=`date +%-d`
+    CheckSpecialCase=$DAYNUM_CUT2
     case $DayNum in
     0 )
       echo "th" ;;
