@@ -205,17 +205,13 @@ function show_queue {
         REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
         REMAINING=$(show_time $REMAINING)
         REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
-        if [ $SHORT -eq 1 ] ; then
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
-        else
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
-        fi
       else
-        if [ $SHORT -eq 1 ] ; then
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult
-        else
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$colClear"            ($colArg$PARTITION$colClear)"
-        fi
+        REMAINING="N/A"${TIME_LINE:3}
+      fi
+      if [ $SHORT -eq 1 ] ; then
+        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
+      else
+        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
       fi
 
     done
@@ -230,7 +226,7 @@ function show_queue {
     sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
-      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear)"
+      echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear  ("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
     else
       echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Job Start Time$colClear"
     fi
