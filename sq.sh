@@ -129,20 +129,14 @@ function show_time () {
 
 function show_queue {
   QUEUE=$(squeue -l -u $USERCODE)
-  # echo "$QUEUE"
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
-
-  # if [ $nRUNNING -eq 0 ] && [ $nPENDING -eq 0 ]; then 
-  #   echo -e $colBold$USERCODE"'s queue is empty"$colClear
-  #   exit
-  # fi
 
   echo -e $colBold$USERCODE"'s queue"$colClear
 
   NAME_LINE='        '
-  TIME_LINE='            '
-  TIME_STRING_LINE="                     "
+  TIME_LINE="              "
+  LIMIT_LINE="     "
 
   # running job summary
   if [ $nRUNNING -eq 0 ] ; then
@@ -151,7 +145,7 @@ function show_queue {
     echo -e $colSuccess"\nRunning: $nRUNNING"$colClear
     if [ $HEADERS -eq 1 ] ; then
       if [ $SHORT -eq 0 ] ; then
-        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Elapsed$colClear ("$colResult$colUnderline"Limit$colClear)       ("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
+        echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Elapsed$colClear        "$colResult$colUnderline"(Limit)$colClear ("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
       else
         echo -e "\n"$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear $colResult$colUnderline"Elapsed$colClear"
       fi
@@ -168,10 +162,12 @@ function show_queue {
       TIME=$(convert4showtime $TIME)
       LIMIT=$(convert4showtime $LIMIT)
 
-      # TIME=${TIME_LINE:${#TIME}}$TIME
-      # LIMIT=${TIME_LINE:${#LIMIT}}$LIMIT
-      TIME_STRING="$TIME ($LIMIT)"
-      TIME_STRING="$colResult$TIME$colClear ($colResult$LIMIT$colClear)"${TIME_STRING_LINE:${#TIME_STRING}}
+      TIME=$TIME${TIME_LINE:${#TIME}}
+
+      LIMIT="("$LIMIT")"${LIMIT_LINE:${#LIMIT}}
+
+      TIME_STRING="$colResult$TIME$colClear $colResult$LIMIT$colClear"
+
       NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $8}')
       NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
       if [ $SHORT -eq 1 ] ; then
@@ -204,14 +200,15 @@ function show_queue {
       NAME="'"$colVarName$NAME$colClear"'""${NAME_LINE:${#NAME}}"
       START_TIME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $6}')
       NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $7}')
-      # NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
-      # echo $START_TIME
+
       if [[ "$START_TIME" != *"N/A"* ]] ; then
         REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
+        REMAINING=$(show_time $REMAINING)
+        REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
         if [ $SHORT -eq 1 ] ; then
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
         else
-          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult$(show_time $REMAINING)$colClear " ($colArg$PARTITION$colClear)"
+          echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
         fi
       else
         if [ $SHORT -eq 1 ] ; then
@@ -291,11 +288,15 @@ function show_queue {
       ELAPSED=$(convert4showtime $ELAPSED)
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
 
+      PARTITION_LINE="                                                            "
+      PARTITION_STR="("$colArg$PARTITION$colClear":"$colArg$NODES$colClear")"
+      PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_STR}}
+
       if [ $SHORT -eq 0 ] ; then
         if [[ $ELAPSED == "" ]] ; then
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" before allocation"$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" $PARTITION_STR "$ELAPSED_COLOR$STATUS" before allocation"$colClear
         else
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" ("$colArg$PARTITION$colClear":"$colArg$NODES$colClear") "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" $PARTITION_STR "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
         fi
       else
         echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
