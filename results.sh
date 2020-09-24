@@ -46,7 +46,11 @@ else
   JOB_NUM=$1
 fi
 
-USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+if [[ $(hostname) == *scarf* ]] ; then
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_scarf)
+else
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+fi
 
 while :
 do
