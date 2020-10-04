@@ -1,0 +1,8 @@
+thisPath=$(pwd)
+gnufile=${thisPath##*/}.gnu
+gnufile2=$thisPath/$gnufile
+
+cp ~/Dropbox/Cheatsheets/template.gnu $gnufile
+
+osascript -e "tell application \"Sublime Text\" to open \"$gnufile2\""
+osascript -e "tell application \"Sublime Text\" to activate"
