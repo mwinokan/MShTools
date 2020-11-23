@@ -15,6 +15,7 @@ fi
 RETURN_PATH=0
 RETURN_DIR=0
 LAST_JOB=0
+QUIET=0
 
 # new argument switch
 
@@ -53,6 +54,10 @@ while test $# -gt 0; do
       LAST_JOB=1
       shift
       ;;
+    -q|--quiet)
+      QUIET=1
+      shift
+      ;;
     *)
       # put tests for integer/string here:
       ARG=$1
@@ -89,12 +94,17 @@ if [ $NOT_INTEGER -eq 1 ] ; then
 
   if [ $? -ne 0 ] ; then
 
-    echo -e $colWarning$"No working directories found containing "$colClear"'"$colArg$STR$colClear"'"
+    if [ $QUIET -eq 0 ] ; then
+      echo -e $colWarning$"No working directories found containing "$colClear"'"$colArg$STR$colClear"'"
+    fi
+
     return 2
 
   fi
 
-  echo -e $colResult"$LS_RESULT"$colClear
+  if [ $QUIET -eq 0 ] ; then
+    echo -e $colResult"$LS_RESULT"$colClear
+  fi
 
   return 0
 
@@ -124,7 +134,9 @@ else
         LJ_DIR=$(cat $WD_DIR/last_job)
         WD_DIR="$WD_DIR/$LJ_DIR"
       else
-        echo -e $colWarning"No "$colFile"last_job$colWarning file in $colFile$WD_DIR"$colClear
+        if [ $QUIET -eq 0 ] ; then
+          echo -e $colWarning"No "$colFile"last_job$colWarning file in $colFile$WD_DIR"$colClear
+        fi
       fi
     fi
     cd $PWD_LAST
@@ -136,13 +148,17 @@ else
 
     if [ $RETURN_PATH -eq 1 ] ; then
 
-      echo $HOME/$WD_DIR
+      if [ $QUIET -eq 0 ] ; then
+        echo $HOME/$WD_DIR
+      fi
 
       return 0
       
     elif [ $RETURN_DIR -eq 1 ] ; then
 
-      echo $WD_DIR
+      if [ $QUIET -eq 0 ] ; then
+        echo $WD_DIR
+      fi
 
       return 0
 
@@ -150,7 +166,9 @@ else
     
       cd $HOME/$WD_DIR
 
-      echo -e "Changed into directory: "$colFile$WD_DIR$colClear
+      if [ $QUIET -eq 0 ] ; then
+        echo -e "Changed into directory: "$colFile$WD_DIR$colClear
+      fi
 
       return 0
 
@@ -158,11 +176,15 @@ else
 
   else
 
-    echo -e $colError"No directory "$colFile"~/WD_"$WD_NUM"*"$colError" found."$colClear
+    if [ $QUIET -eq 0 ] ; then
+      echo -e $colError"No directory "$colFile"~/WD_"$WD_NUM"*"$colError" found."$colClear
+    fi
     return 3
 
   fi
 
 fi
 
-echo -e $colWarning"Failed switch, no result."$colClear
+if [ $QUIET -eq 0 ] ; then
+  echo -e $colWarning"Failed switch, no result."$colClear
+fi
