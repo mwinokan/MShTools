@@ -12,7 +12,7 @@ function fancyOut {
 
 # headerOut <HEADER> [<ECHO_STR>]
 function headerOut {
-  echo -e $colBold$2$1$colClear
+  echo -e $colBold"$@"$colClear
 }
 
 # varOut <NAME> <VALUE> <UNIT> [<VALUE_COL_STRING>]
