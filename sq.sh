@@ -7,7 +7,7 @@ SHORT=0
 HEADERS=1
 
 if [[ $(hostname) == *scarf* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_scarf)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
 else
   USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 fi
