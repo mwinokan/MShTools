@@ -3,11 +3,17 @@
 while test $# -gt 0; do
   case "$1" in
     --configure-github)
+      # Store suppressed information
       echo "# Suppressed Information Do Not Distribute" > .suppressed_github
       shift
       echo "author="$1";" >> .suppressed_github
       echo "user="$2";" >> .suppressed_github
       echo "email="$3";" >> .suppressed_github
+      
+      # Run setups
+      git config --global user.name "$1"
+      git config --global user.email "$3"
+
       exit 0
       ;;
     --configure-gitlab)
@@ -19,6 +25,10 @@ while test $# -gt 0; do
       echo "surrey_useremail="$2"@surrey.ac.uk;" >> .suppressed_gitlab
       echo "surrey_staffemail="$3"@surrey.ac.uk;" >> .suppressed_gitlab
       echo "token="$4";" >> .suppressed_gitlab
+
+      # Do some other setups
+
+
       exit 0
       ;;
     --configure-extern)
