@@ -65,6 +65,20 @@ while test $# -gt 0; do
   esac
 done
 
+if [[ $(hostname) == *eslogin* ]] ; then
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      clear
+      qstat -u maxwin
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    qstat -u maxwin
+  fi
+  exit 0
+fi
 
 function convert4showtime {
   TIME=$1
