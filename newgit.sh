@@ -149,7 +149,16 @@ else
   # initialise git & configure authorship:
   echo -e $colBold"Initialising and configuring authorship..."$colClear
   AUTH=$(grep -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  if [ $? -ne 0 ] ; then 
+    echo -e $colError"grep error"$colClear
+  fi
   EMAIL=$(grep -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  if [ $? -ne 0 ] ; then 
+    echo -e $colError"grep error"$colClear
+  fi
+  echo -e "$colArg$AUTH$colClear"
+  echo -e "$colArg$EMAIL$colClear"
+
   git init
   git config user.name $AUTH
   git config user.email $EMAIL
