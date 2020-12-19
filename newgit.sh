@@ -2,6 +2,7 @@
 
 # source necessary files
 source $MWSHPATH/colours.sh
+source $MWSHPATH/out.sh
 source $MWSHPATH/directory_exists.sh
 
 # check number of arguments
@@ -16,6 +17,12 @@ fi
 FORCE=0
 ALL=0
 SURREY=0
+DARWIN=0
+
+if [[ $(uname) == "Darwin" ]] ; then
+  warningOut "Running on MacOS!"
+  DARWIN=1
+fi
 
 # check for flags
 
@@ -148,21 +155,39 @@ else
 
   # initialise git & configure authorship:
   echo -e $colBold"Initialising and configuring authorship..."$colClear
-  AUTH=$(grep -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
-  if [ $? -ne 0 ] ; then 
-    echo -e $colError"grep error"$colClear
+  
+  # Get the author name
+  if [ $DARWIN -eq 0 ] ; then
+    AUTH=$(grep -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  else
+    AUTH=$(perl -nle'print $& while m{(?<=author=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
-  EMAIL=$(grep -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
-  if [ $? -ne 0 ] ; then 
-    echo -e $colError"grep error"$colClear
+  if [[ -z $AUTH ]] ; then 
+    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    exit 1
   fi
+
+  # Get the email
+  if [ $DARWIN -eq 0 ] ; then
+    EMAIL=$(grep -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  else
+    EMAIL=$(perl -nle'print $& while m{(?<=staffemail=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+  fi
+  if [[ -z $EMAIL ]] ; then 
+    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    exit 2
+  fi
+
+  # User output
   echo -e "$colArg$AUTH$colClear"
   echo -e "$colArg$EMAIL$colClear"
 
+  # Git things
   git init
   git config user.name $AUTH
   git config user.email $EMAIL
 
+  # Make the readme
   fileExistsQuiet README.md
   if [ $? -eq 0 ] || [ $FORCE -eq 1 ] ; then
     # create README.md
@@ -191,11 +216,31 @@ else
   # commit
   echo -e $colBold"Committing..."$colClear
   git commit -m "$COMMIT_MSG"
+  
+  # Get gitlab authorisation token
+  if [ $DARWIN -eq 0 ] ; then
+    TOKEN=$(grep -oP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  else
+    TOKEN=$(perl -nle'print $& while m{(?<=token=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+  fi
+  if [[ -z $TOKEN ]] ; then 
+    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    exit 3
+  fi
+
+  # Get surrey usercode
+  if [ $DARWIN -eq 0 ] ; then
+    USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  else
+    USERCODE=$(perl -nle'print $& while m{(?<=usercode=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+  fi
+  if [[ -z $USERCODE ]] ; then 
+    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    exit 4
+  fi
 
   # push to GitLab (created new project)
   echo -e $colBold"Pushing to GitLab..."$colClear
-  TOKEN=$(grep -oP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   git push --set-upstream https://oauth2:$TOKEN@gitlab.eps.surrey.ac.uk/$USERCODE/$REPO_NAME.git master # HTTPS
 
 fi
