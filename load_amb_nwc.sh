@@ -1,20 +1,89 @@
 #!/bin/bash
 
+##########
+
+# CLI
+
+REPLACE_DFT=0
+DFT_TEMPLATE="dft.nw"
+
+source $MWSHPATH/colours.sh
+source $MWSHPATH/out.sh
+
+while test $# -gt 0; do
+	case "$1" in
+		-h|-help|--help|-usage|--usage)
+			echo -e $colBold"Methods for "$colFunc"load_amb_nwc.sh"$colClear":"
+			echo 
+			echo -e $colFunc"load_amb_nwc.sh"$colClear$colClear" "
+			echo -e "Load AMBER & NWChem with all available threads (not recommended) "
+			echo 
+			echo -e $colFunc"load_amb_nwc.sh"$colClear$colArg" -np <N> "$colClear
+			echo -e "Load AMBER & NWChem with N threads for NWChem "
+			echo 
+			echo -e $colFunc"load_amb_nwc.sh"$colClear$colArg" -dft "$colClear
+			echo -e "Load AMBER & NWChem and take dft block from ./dft.nw "
+			echo 
+			echo -e $colFunc"load_amb_nwc.sh"$colClear$colArg" -dft --template <FILE>"$colClear
+			echo -e "Load AMBER & NWChem and take dft block from <FILE> "
+			echo 
+			echo -e $colArg" -xnwi <COMMAND>"$colClear
+			echo -e "Append command to nwchem input file"
+			echo
+			echo -e $colArg" -xnwe <COMMAND>"$colClear
+			echo -e "Prepend command to nwchem executable wrapper"
+			exit 1
+			;;
+		-np)
+			shift 
+			NPROC_NWC=$1
+			shift
+			;;
+		-dft)
+			shift 
+			REPLACE_DFT=1
+			;;
+		--template)
+			shift 
+			DFT_TEMPLATE=$1
+			shift
+			;;
+		-xnwi|--extra-nwchem-input)
+			shift 
+			EXLINE="$EXLINE""$1\n"
+			shift
+			;;
+		-xnwe|--extra-nwchem-executable)
+			shift 
+			EXEXLINE="$EXEXLINE""$1\n"
+			shift
+			;;
+		*)
+			warningOut "Unrecognised CLI flag: $colArg$1"
+			break
+			;;
+	esac
+done
+
+# echo $NPROC_NWC
+# echo $REPLACE_DFT
+# echo $DFT_TEMPLATE
+
+##########
+
+varOut "Path" $(pwd)
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]] ; then
 	echo "Please source this script. i.e. :"
 	echo "source \$MWSHPATH/load_amb_nwc.sh <N_NWCHEM_THREADS>"
 	exit 1
 fi
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
-
-if [ -z $1 ] ; then
+if [ -z $NPROC_NWC ] ; then
 	warningOut "No NWChem thread count supplied, will use all available."
 	NPROC_NWC=0
 else
-	varOut "NWChem num_threads" $1
-	NPROC_NWC=$1
+	varOut "NWChem num_threads" $NPROC_NWC
 fi
 
 # Program Locations
@@ -48,14 +117,48 @@ PATH=$NWCHEM_L64/lib/LINUX64:$PATH
 PATH=$(pwd):$PATH
 export PATH
 
-# Create wrapper binary that calls mpirun first
-if [ $NPROC_NWC -eq 0 ] ; then
-	echo -e "#!/bin/bash\nmpirun $NWCHEM_L64/nwchem \$@\n" > nwchem
-else
-	echo -e "#!/bin/bash\nmpirun -np $NPROC_NWC $NWCHEM_L64/nwchem "'$@'"\n" > nwchem
+# Wrapper commands
+SHEBANG="#!/bin/bash"
+ENDLINE="\n"
+NWC_EXEC="$NWCHEM_L64/nwchem"
+
+# Use custom DFT block
+PRERUN=""
+if [ ! -z "$EXEXLINE" ] ; then
+	# headerOut $EXEXLINE
+	PRERUN="$EXEXLINE"
+fi
+if [ $REPLACE_DFT -eq 1 ] ; then
+	varOut "DFT_TEMPLATE" $DFT_TEMPLATE
+
+	# SED_IN='/dft$/,/end$/c\'$(cat $DFT_TEMPLATE)
+	# echo "$SED_IN" 
+	# PRERUN="$PRERUN""sed -i "$SED_IN" nwchem.nw"
+	PRERUN="$PRERUN""sed -i 's/dft$/SED_TARGET/' nwchem.nw$ENDLINE"
+	PRERUN="$PRERUN""sed -i 's/end$//' dft.nw$ENDLINE"
+	SED_IN="'/SED_TARGET$/ {p; r $DFT_TEMPLATE'"
+	PRERUN="$PRERUN""sed -i -ne $SED_IN -e ':a; n; /end$/ {p; b}; ba}; p' nwchem.nw$ENDLINE"
+	PRERUN="$PRERUN""sed -i 's/SED_TARGET/dft/' nwchem.nw$ENDLINE"
 fi
 
+# Extra input commands
+if [ ! -z "$EXLINE" ] ; then
+	echo "$EXLINE" >> nwchem.nw
+fi
+
+# Limit processors (optional)
+if [ $NPROC_NWC -eq 0 ] ; then
+	RUNCMD="mpirun "
+else
+	RUNCMD="mpirun -np $NPROC_NWC "
+fi
+
+# Create wrapper binary that calls mpirun first
+echo -e "$SHEBANG$ENDLINE$PRERUN$RUNCMD$NWC_EXEC "'$@'"$ENDLINE" > nwchem
+
+# Make the binary executable
 chmod 755 nwchem
 
+# User output
 echo -e "$colFunc""AmberTools/NWChem/MPI$colClear: $colSuccess""ready to use.$colClear"
 return 0
