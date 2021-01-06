@@ -1,10 +1,13 @@
 
 #!/bin/bash
 source $MWSHPATH/colours.sh
+source $MWSHPATH/out.sh
 
 LOOP=0
 SHORT=0
 HEADERS=1
+PENDING=0
+IDLE=0
 
 if [[ $(hostname) == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
@@ -19,11 +22,14 @@ while test $# -gt 0; do
     -h|--help)
       echo -e "Usage for "$colFunc"sq"$colClear":"
       echo -e $colArg"-l"$colClear" loop indefinitely"
-      echo -e $colArg"-i"$colClear" cluster info (sinfo)"
+      echo -e $colArg"-si"$colClear" cluster info (sinfo)"
       echo -e $colArg"-s"$colClear" short output"
       echo -e $colArg"-nh"$colClear" don't show headers"
       echo -e $colArg"-p <N>"$colClear" show previous N jobs, default is 5"
       echo -e $colArg"-u <USER>"$colClear" show USER's queue"
+      echo -e $colArg"-q "$colClear" Show pending jobs for all users"
+      echo -e $colArg"-i "$colClear" Show idle nodes"
+      echo -e $colArg"-a "$colClear" Show jobs about to end for all users"
       exit 1
       ;;
     -l)
@@ -47,10 +53,24 @@ while test $# -gt 0; do
       USERCODE=$1
       shift
       ;;
-    -i)
+    -si)
       shift
       sinfo
       exit
+      ;;
+    -i|-idle|--idle)
+      shift
+      IDLE=1
+      ;;
+    -a|-r)
+      shift
+      squeue -S "f,e" -o " %.9P %.1T %.6D %f %e " | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t
+      # squeue -S "f,e" -o "%.18i %.9P %.18j %.8u %.1T %.10M %.9l %e %.6D %f" | grep " R \|JOBID" | column -t
+      exit 0
+      ;;
+    -q)
+      shift
+      PENDING=1
       ;;
     -p)
       shift
@@ -141,7 +161,8 @@ function show_time () {
 
 function show_queue {
   # Header strings
-  HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear" "
+  # HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear" "
+  HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear'           $colVarType$colUnderline# Nodes"$colClear" "
   HDR_PART_NODES="("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
   HDR_ELAPSED=$colResult$colUnderline"Elapsed$colClear"
   HDR_PART="("$colArg$colUnderline"partition$colClear)"
@@ -149,6 +170,7 @@ function show_queue {
 
   # get the queue and number of jobs
   QUEUE=$(squeue -l -u $USERCODE)
+  QUEUE=$(squeue -o "%.18i %.9P %.18j %.8u %.8T %.10M %.9l %.6D %R" -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
 
@@ -156,7 +178,8 @@ function show_queue {
   echo -e $colBold$USERCODE"'s queue"$colClear
 
   # blank lines for padding
-  NAME_LINE='        '
+  # NAME_LINE='        '
+  NAME_LINE='                  '
   TIME_LINE="              "
   LIMIT_LINE="     "
 
@@ -213,7 +236,8 @@ function show_queue {
       fi
     fi
 
-    QUEUE=$(squeue --start -u $USERCODE)
+    # QUEUE=$(squeue --start -u $USERCODE)
+    QUEUE=$(squeue --start --format="%.18i %.9P %.18j %.8u %.2t %.19S %.6D %20Y %R" -u $USERCODE)
     # echo $QUEUE
     JOBIDS=$(echo -e "$QUEUE" | grep "PD" | awk '{print $1}')
     for JOB in $JOBIDS; do
@@ -245,7 +269,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%18,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
@@ -322,6 +346,28 @@ function show_queue {
   rm __temp__* 2> /dev/null
 }
 
+function pend_queue {
+  squeue -l | head -n2
+  echo -ne $colBold
+  MYPEND=$(squeue -l -u $USERCODE | grep PENDING)
+  echo "$MYPEND"
+  echo -ne $colClear
+  OTHERPEND=$(squeue -l | grep PENDING | grep -v $USERCODE)
+  echo "$OTHERPEND"
+  varOut "$USERCODE's pending jobs" $(echo "$MYPEND" | wc -l)
+  varOut "Other pending jobs" $(echo "$OTHERPEND" | wc -l)
+}
+
+function idle_queue {
+  HEADER=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | head -n1)
+  OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
+  DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
+  V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
+  OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2")
+
+  echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+}
+
 # https://stackoverflow.com/questions/2495459/formatting-the-date-in-unix-to-include-suffix-on-day-st-nd-rd-and-th
 DaySuffix() {
     START=$1
@@ -367,14 +413,49 @@ DaySuffix() {
     esac
 }
 
-if [ $LOOP -eq 1 ] ; then
-  while :
-  do
-    clear
-    show_queue
-    echo -e "\nPress [CTRL+C] to stop.."
-    sleep 1.0
-  done
+if [ $PENDING -eq 1 ] ; then
+
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      clear
+      pend_queue
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    pend_queue
+  fi
+  exit 0
+
+elif [ $IDLE -eq 1 ] ; then
+
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      clear
+      idle_queue
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    idle_queue
+  fi
+  exit 0
+
 else
-  show_queue
+
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      clear
+      show_queue
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    show_queue
+  fi
+  exit 0
+
 fi
