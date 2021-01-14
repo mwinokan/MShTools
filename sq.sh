@@ -7,6 +7,7 @@ LOOP=0
 SHORT=0
 HEADERS=1
 PENDING=0
+RUNNING=0
 IDLE=0
 
 if [[ $(hostname) == *scarf* ]] ; then
@@ -63,10 +64,12 @@ while test $# -gt 0; do
       IDLE=1
       ;;
     -a|-r)
+      # shift
+      # squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t
+      # # squeue -S "f,e" -o "%.18i %.9P %.18j %.8u %.1T %.10M %.9l %e %.6D %f" | grep " R \|JOBID" | column -t
+      # exit 0
       shift
-      squeue -S "f,e" -o " %.9P %.1T %.6D %f %e " | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t
-      # squeue -S "f,e" -o "%.18i %.9P %.18j %.8u %.1T %.10M %.9l %e %.6D %f" | grep " R \|JOBID" | column -t
-      exit 0
+      RUNNING=1
       ;;
     -q)
       shift
@@ -169,7 +172,7 @@ function show_queue {
   HDR_LIMIT=$colResult$colUnderline"(Limit)$colClear "
 
   # get the queue and number of jobs
-  QUEUE=$(squeue -l -u $USERCODE)
+  # QUEUE=$(squeue -l -u $USERCODE)
   QUEUE=$(squeue -o "%.18i %.9P %.18j %.8u %.8T %.10M %.9l %.6D %R" -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
@@ -354,7 +357,7 @@ function pend_queue {
   echo -ne $colClear
   OTHERPEND=$(squeue -l | grep PENDING | grep -v $USERCODE)
   echo "$OTHERPEND"
-  varOut "$USERCODE's pending jobs" $(echo "$MYPEND" | wc -l)
+  varOut "$USERCODE's pending jobs" $(echo "$MYPEND" | grep $USERCODE | wc -l)
   varOut "Other pending jobs" $(echo "$OTHERPEND" | wc -l)
 }
 
@@ -363,9 +366,31 @@ function idle_queue {
   OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
   DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
   V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
-  OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2")
+  CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
+  OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2" | grep -v "node43\|node44\|node55\|node56")
 
-  echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+  echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+}
+
+function running_queue {
+  SBOLD=$(printf '%s\n' "$colBold" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SCLEAR=$(printf '%s\n' "$colClear" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SFAINT=$(printf '%s\n' "$cFAINT" | sed -e 's/[]\/$*.^[]/\\&/g')
+
+  SRED=$(printf '%s\n' "$cRED" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SGREEN=$(printf '%s\n' "$cGREEN" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SBLUE=$(printf '%s\n' "$cBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SCYAN=$(printf '%s\n' "$cCYAN" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SYELLOW=$(printf '%s\n' "$cYELLOW" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SMAGENTA=$(printf '%s\n' "$cMAGENTA" | sed -e 's/[]\/$*.^[]/\\&/g')
+  SBBLUE=$(printf '%s\n' "$cBBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
+
+  QUEUE=$(squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t)
+  QUEUE=$(echo "$QUEUE" | sed "s/mw00368/$SBOLD""mw00368""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/chemistry_25/$SCYAN""chemistry_25""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
+
+  echo -e "$QUEUE" | head -n50
+
+  # echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
 }
 
 # https://stackoverflow.com/questions/2495459/formatting-the-date-in-unix-to-include-suffix-on-day-st-nd-rd-and-th
@@ -443,6 +468,21 @@ elif [ $IDLE -eq 1 ] ; then
   fi
   exit 0
 
+elif [ $RUNNING -eq 1 ] ; then
+
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      clear
+      running_queue
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    running_queue
+  fi
+  exit 0
+
 else
 
   if [ $LOOP -eq 1 ] ; then
@@ -459,3 +499,4 @@ else
   exit 0
 
 fi
+
