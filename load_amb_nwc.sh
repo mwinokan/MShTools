@@ -81,7 +81,7 @@ fi
 
 if [ -z $NPROC_NWC ] ; then
 	warningOut "No NWChem thread count supplied, will use all available."
-	NPROC_NWC=0
+	# NPROC_NWC=0
 else
 	varOut "NWChem num_threads" $NPROC_NWC
 fi
@@ -147,14 +147,14 @@ if [ ! -z "$EXLINE" ] ; then
 fi
 
 # Limit processors (optional)
-if [ $NPROC_NWC -eq 0 ] ; then
+if [ -z $NPROC_NWC ] ; then
 	RUNCMD="mpirun "
 else
 	RUNCMD="mpirun -np $NPROC_NWC "
 fi
 
 # Create wrapper binary that calls mpirun first
-echo -e "$SHEBANG$ENDLINE$PRERUN$RUNCMD$NWC_EXEC "'$@'"$ENDLINE" > nwchem
+echo -e "$SHEBANG$ENDLINE$PRERUN$RUNCMD$NWC_EXEC "'$@'"$ENDLINE""exit "'$?'" $ENDLINE" > nwchem
 
 # Make the binary executable
 chmod 755 nwchem
