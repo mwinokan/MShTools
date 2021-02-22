@@ -3,6 +3,7 @@
 source $MWSHPATH/colours.sh
 
 LOOP=0
+DIR=0
 NO_ERRORS=0
 
 while test $# -gt 0; do
@@ -17,6 +18,10 @@ while test $# -gt 0; do
       ;;
     -l)
       LOOP=1
+      shift
+      ;;
+    -d)
+      DIR=1
       shift
       ;;
     -o|--open)
@@ -40,11 +45,17 @@ done
 
 if [ $# -eq 0 ]
 then 
-  JOB_NUM=$(cat last_job)
-  # echo -e $colWarning"Defaulted to last job: "$JOB_NUM"."$colClear
+  # JOB_NUM=$(cat last_job)
+  echo -e $colError"No job number!"$colClear
+  exit 1
 else
   JOB_NUM=$1
 fi
+
+FILE_PATTERN=$JOB_NUM
+
+JOB_NUM=$(basename $JOB_NUM)
+JOB_NUM=${JOB_NUM:0:6}
 
 if [[ $(hostname) == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
@@ -57,18 +68,19 @@ do
   if [ $LOOP -eq 1 ] ; then 
     clear 
   fi
-    JOBNUM=$(tail -1 run_log | grep -oP '.*?(?=:)' | head -1)
-    if [ $(squeue -l -u $USERCODE | grep $JOBNUM | wc -l ) -eq 0 ] ; then
-      LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
-      if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
-      echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
-      ls --color=auto -xX $JOB_NUM
-    else    
+    # JOBNUM=$(tail -1 run_log 2>/dev/null | grep -oP '.*?(?=:)' | head -1 2>/dev/null)
+    if [ $(squeue -l -u $USERCODE | grep $JOB_NUM | wc -l ) -ne 0 ] ; then
+      # LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
+      # if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
+      # if [ $DIR -eq 1 ] ; then
+      #   echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
+      #   ls --color=auto -xX $JOB_NUM
+      # fi
       echo -e $colBold"SLURM Queue"$colClear":"
       # squeue -l -u $USERCODE
-      sq.sh | grep $JOBNUM
-      echo -e $colBold"\nFiles in "$colFile""\$PSCRATCH/$JOB_NUM$colClear":"
-      ls --color=auto -xX $PSCRATCH/$JOB_NUM
+      sq.sh | grep $JOB_NUM
+      # echo -e $colBold"\nFiles in "$colFile""\$PSCRATCH/$JOB_NUM$colClear":"
+      # ls --color=auto -xX $PSCRATCH/$JOB_NUM
     fi
   # else
   #   LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
@@ -77,19 +89,24 @@ do
   #   ls --color=auto -xX $JOB_NUM
   # fi
 
-  CAT_TEST=$(cat $JOB_NUM.o 2>/dev/null)
-  if [ $? -eq 0 ] ; then
-    O_FILE=$JOB_NUM.o
-  else
-    O_FILE=$JOB_NUM/$JOB_NUM.o
-  fi
+  # sq.sh | grep $JOB_NUM
 
-  CAT_TEST=$(cat $JOB_NUM.e 2>/dev/null)
-  if [ $? -eq 0 ] ; then
-    E_FILE=$JOB_NUM.e
-  else
-    E_FILE=$JOB_NUM/$JOB_NUM.e
-  fi
+  O_FILE=$FILE_PATTERN*.o
+  E_FILE=$FILE_PATTERN*.e
+  
+  # CAT_TEST=$(cat $JOB_NUM.o 2>/dev/null)
+  # if [ $? -eq 0 ] ; then
+  #   O_FILE=$JOB_NUM.o
+  # else
+  #   O_FILE=$JOB_NUM/$JOB_NUM.o
+  # fi
+
+  # CAT_TEST=$(cat $JOB_NUM.e 2>/dev/null)
+  # if [ $? -eq 0 ] ; then
+  #   E_FILE=$JOB_NUM.e
+  # else
+  #   E_FILE=$JOB_NUM/$JOB_NUM.e
+  # fi
 
   O_LINES=$(wc -l $O_FILE | awk '{ print $1 }')
   E_LINES=$(wc -l $E_FILE | awk '{ print $1 }')
