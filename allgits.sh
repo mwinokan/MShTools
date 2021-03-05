@@ -10,10 +10,12 @@ source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
 # Defaults:
-SHORT=0
+SHORT=1
 SHOW_SURREY=1
 SHOW_GITHUB=1
 SEARCH=0
+UPDATE=0
+PULL=0
 
 # Parse arguments:
 while test $# -gt 0; do
@@ -21,15 +23,25 @@ while test $# -gt 0; do
     -u|-h|--usage|--help)
       echo -e $colBold"Usage for "$colFunc""allgits.sh$colClear":"
       echo -e $colArg"-u -h --usage --help"$colClear" Display this usage screen"
-      echo -e $colArg"-s --short          "$colClear" Briefer output"
+      echo -e $colArg"-l --long           "$colClear" Longer output"
       echo -e $colArg"-ns --no-surrey     "$colClear" Don't show Surrey GitLab repos"
       echo -e $colArg"-ng --no-github     "$colClear" Don't show github repos"
       echo -e $colArg"-n --name           "$colClear" Search for repos containing tag"
+      echo -e $colArg"-r --refresh        "$colClear" Rebuild list of repositories"
+      echo -e $colArg"-p --pull           "$colClear" Pull all repositories"
       exit 0
       ;;
-    -s|--short)
+    -l|--long)
       shift
-      SHORT=1
+      SHORT=0
+      ;;
+    -r|--refresh)
+      shift
+      UPDATE=1
+      ;;
+    -p|--pull)
+      shift
+      PULL=1
       ;;
     -ns|--no-surrey)
       shift
@@ -71,8 +83,20 @@ GH_EMAIL=$($MYGREP -oP "(?<=email=).*(?=;)" $MWSHPATH/.suppressed_github)
 GL_USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 GL_STAFFNAME=$($MYGREP -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 
-# Find all the .git folders in home directory:
-ALL_GITS=$(find $HOME -iname ".git" 2> /dev/null | sort)
+if [ ! -e $MWSHPATH/.all_gits ] ; then
+  # Find all the .git folders in home directory:
+  echo "Searching for repositories in \$HOME..."
+  find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
+fi
+
+if [ $UPDATE -eq 1 ] ; then
+  # Find all the .git folders in home directory:
+  echo "Searching for repositories in \$HOME..."
+  find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
+fi
+
+# Get the list of repositories
+ALL_GITS=$(cat $MWSHPATH/.all_gits)
 
 # Write the list of all the .git paths to temporary file
 echo -e "$ALL_GITS" > __temp__
@@ -143,6 +167,22 @@ while IFS= read -r GIT; do
 
   LAST=$(pwd) # store current path
   cd "$GIT"/.. # go to repo root directory
+
+  if [ $PULL -eq 1 ] ; then
+    git pull > __temp__PULL 2>&1
+    # cat __temp__PULL
+    if [ $(grep "Already" __temp__PULL | grep "up" | grep "to" | grep "date" | wc -l) -gt 0 ] ; then
+      PULL_STAT=0
+      echo -n -e "     "
+    elif [ $(grep "error" __temp__PULL | wc -l) -gt 0 ] ; then
+      PULL_STAT=-1
+      echo -n -e "$colError""Pull $colClear"
+    elif [ $(grep "Fast-forward" __temp__PULL | wc -l) -gt 0 ] ; then
+      PULL_STAT=1
+      echo -n -e "$colSuccess""Pull $colClear"
+    fi
+    rm __temp__PULL
+  fi
 
   # get the git status output:
   GIT_STATUS=$(git status) 
