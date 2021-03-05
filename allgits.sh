@@ -59,11 +59,17 @@ if [[ ! -e $MWSHPATH/.suppressed_github || ! -e $MWSHPATH/.suppressed_gitlab ]] 
   exit 1
 fi
 
+if [[ $(uname) == "Darwin" ]] ; then
+  MYGREP="/usr/local/bin/ggrep"
+else
+  MYGREP=$(which grep)
+fi
+
 # Get the suppressed user info
-GH_USER=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_github)
-GH_EMAIL=$(grep -oP "(?<=email=).*(?=;)" $MWSHPATH/.suppressed_github)
-GL_USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
-GL_STAFFNAME=$(grep -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+GH_USER=$($MYGREP -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_github)
+GH_EMAIL=$($MYGREP -oP "(?<=email=).*(?=;)" $MWSHPATH/.suppressed_github)
+GL_USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+GL_STAFFNAME=$($MYGREP -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 
 # Find all the .git folders in home directory:
 ALL_GITS=$(find $HOME -iname ".git" 2> /dev/null | sort)
@@ -92,9 +98,9 @@ while IFS= read -r GIT; do
       # echo -e $colBold"X"$GH_USER"X"$colClear
       # sublime $GIT/config
       
-      # REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
-      # REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*")
-      URL=$(cat "$GIT/config" | grep -oP "(?<=url\ \=\ ).*")
+      # REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*(?=.git)")
+      # REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*")
+      URL=$(cat "$GIT/config" | $MYGREP -oP "(?<=url\ \=\ ).*")
       REPO_NAME=$(basename $URL .git)
 
       REPO_TYPE=1
@@ -114,12 +120,12 @@ while IFS= read -r GIT; do
     if [ $(cat "$GIT/config" | grep $GL_STAFFNAME | wc -l) -gt 0 ] ; then
       ## my repo
 
-      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GL_USERCODE/).*(?=.git)")
+      REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GL_USERCODE/).*(?=.git)")
       REPO_TYPE=2
     elif [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -gt 0 ] ; then
       ## my repo
 
-      REPO_NAME=$(cat "$GIT/config" | grep -oP "(?<=$GH_USER/).*(?=.git)")
+      REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*(?=.git)")
       REPO_TYPE=2
     else
       ## not my repo
@@ -165,12 +171,12 @@ while IFS= read -r GIT; do
   if [ $SHORT -eq 0 ] ; then echo -e -n " Local: "; fi
   if [ $SHORT -eq 0 ] ; then 
     HM="$HOME/"
-    LOCAL_DIR=$(echo -e "$GIT" | grep -oP '(?).*(?=/.git)')
+    LOCAL_DIR=$(echo -e "$GIT" | $MYGREP -oP '(?).*(?=/.git)')
     LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
     echo -e -n $colFile"~/$LOCAL_DIR"$colClear
   else
     HM="$HOME/"
-    LOCAL_DIR=$(echo -e "$GIT" | grep -oP '(?).*(?=/.git)')
+    LOCAL_DIR=$(echo -e "$GIT" | $MYGREP -oP '(?).*(?=/.git)')
     LOCAL_DIR=$(echo "$LOCAL_DIR" | sed -e "s|^$HM||")
     if [[ $LOCAL_DIR == "WD_"* ]] ; then
 
