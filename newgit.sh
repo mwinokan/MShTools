@@ -22,10 +22,12 @@ DARWIN=0
 if [[ $(uname) == "Darwin" ]] ; then
   warningOut "Running on MacOS!"
   DARWIN=1
+  MYGREP="/usr/local/bin/ggrep"
+else
+  MYGREP=$(which grep)
 fi
 
 # check for flags
-
 while test $# -gt 0; do
   case "$1" in
     -h|--help)
@@ -68,7 +70,7 @@ while test $# -gt 0; do
       ;;
     -s|--surrey)
       SURREY=1
-      USEREMAIL=$(grep -oP "(?<=useremail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+      USEREMAIL=$($MYGREP "(?<=useremail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
       echo -e $colWarning"Using $USEREMAIL GitLab credentials."$colClear
       shift
       ;;
@@ -158,7 +160,7 @@ else
   
   # Get the author name
   if [ $DARWIN -eq 0 ] ; then
-    AUTH=$(grep -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    AUTH=$($MYGREP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     AUTH=$(perl -nle'print $& while m{(?<=author=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -169,7 +171,7 @@ else
 
   # Get the email
   if [ $DARWIN -eq 0 ] ; then
-    EMAIL=$(grep -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    EMAIL=$($MYGREP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     EMAIL=$(perl -nle'print $& while m{(?<=staffemail=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -219,7 +221,7 @@ else
   
   # Get gitlab authorisation token
   if [ $DARWIN -eq 0 ] ; then
-    TOKEN=$(grep -oP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    TOKEN=$($MYGREP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     TOKEN=$(perl -nle'print $& while m{(?<=token=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -230,7 +232,7 @@ else
 
   # Get surrey usercode
   if [ $DARWIN -eq 0 ] ; then
-    USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    USERCODE=$($MYGREP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     USERCODE=$(perl -nle'print $& while m{(?<=usercode=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
