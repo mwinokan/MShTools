@@ -1,5 +1,5 @@
-
 #!/bin/bash
+
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
@@ -44,6 +44,18 @@ while test $# -gt 0; do
     -louie)
       shift
       USERCODE=ls00338
+      ;;
+    -cedric)
+      shift
+      USERCODE=cv00220
+      ;;
+    -max)
+      shift
+      USERCODE=mw00368
+      ;;
+    -roisin)
+      shift
+      USERCODE=rg00700
       ;;
     -s)
       shift
@@ -336,9 +348,9 @@ function show_queue {
 
       if [ $SHORT -eq 0 ] ; then
         if [[ $ELAPSED == "" ]] ; then
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" $PARTITION_STR "$ELAPSED_COLOR$STATUS" before allocation"$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" before allocation"$colClear
         else
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" $PARTITION_STR "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
         fi
       else
         echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
