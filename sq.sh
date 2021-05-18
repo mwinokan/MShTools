@@ -12,6 +12,8 @@ IDLE=0
 
 if [[ $(hostname) == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+elif [[ $(hostname) == uan01 ]] ; then
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
 else
   USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 fi
