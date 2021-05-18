@@ -47,6 +47,7 @@ while test $# -gt 0; do
     -o|--outkey)
       shift
       OUTKEY=$1
+      shift
       ;;
     *)
       echo -e $colError"Unknown flag: "$colArg$1$colClear
