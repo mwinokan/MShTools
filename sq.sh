@@ -16,7 +16,7 @@ else
   USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
 fi
 
-SHOW_PREV_NUM=5
+SHOW_PREV_NUM=10
 
 while test $# -gt 0; do
   case "$1" in
@@ -177,7 +177,7 @@ function show_time () {
 function show_queue {
   # Header strings
   # HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear" "
-  HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear'           $colVarType$colUnderline# Nodes"$colClear" "
+  HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear'               $colVarType$colUnderline# Nodes"$colClear" "
   HDR_PART_NODES="("$colArg$colUnderline"partition$colClear:"$colArg$colUnderline"nodes$colClear)"
   HDR_ELAPSED=$colResult$colUnderline"Elapsed$colClear"
   HDR_PART="("$colArg$colUnderline"partition$colClear)"
@@ -185,7 +185,7 @@ function show_queue {
 
   # get the queue and number of jobs
   # QUEUE=$(squeue -l -u $USERCODE)
-  QUEUE=$(squeue -o "%.18i %.9P %.18j %.8u %.8T %.10M %.9l %.6D %R" -u $USERCODE)
+  QUEUE=$(squeue -o "%.18i %.9P %.22j %.8u %.8T %.10M %.9l %.6D %R" -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
 
@@ -195,6 +195,7 @@ function show_queue {
   # blank lines for padding
   # NAME_LINE='        '
   NAME_LINE='                  '
+  NAME_LINE='                      '
   TIME_LINE="              "
   LIMIT_LINE="     "
 
@@ -252,7 +253,7 @@ function show_queue {
     fi
 
     # QUEUE=$(squeue --start -u $USERCODE)
-    QUEUE=$(squeue --start --format="%.18i %.9P %.18j %.8u %.2t %.19S %.6D %20Y %R" -u $USERCODE)
+    QUEUE=$(squeue --start --format="%.18i %.9P %.22j %.8u %.2t %.19S %.6D %20Y %R" -u $USERCODE)
     # echo $QUEUE
     JOBIDS=$(echo -e "$QUEUE" | grep "PD" | awk '{print $1}')
     for JOB in $JOBIDS; do
@@ -284,7 +285,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%18,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
@@ -348,9 +349,9 @@ function show_queue {
 
       if [ $SHORT -eq 0 ] ; then
         if [[ $ELAPSED == "" ]] ; then
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" before allocation"$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" pre-start"$colClear
         else
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" after "$ELAPSED_COLOR$ELAPSED$colClear
+          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS", "$ELAPSED_COLOR$ELAPSED$colClear
         fi
       else
         echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
@@ -398,7 +399,7 @@ function running_queue {
   SBBLUE=$(printf '%s\n' "$cBBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
 
   QUEUE=$(squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t)
-  QUEUE=$(echo "$QUEUE" | sed "s/mw00368/$SBOLD""mw00368""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/chemistry_25/$SCYAN""chemistry_25""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
+  QUEUE=$(echo "$QUEUE" | sed "s/$USERCODE/$SBOLD""$USERCODE""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/cv00220/$SYELLOW""cv00220""$SCLEAR/" | sed "s/chemistry_25/$SCYAN""chemistry_25""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
 
   echo -e "$QUEUE" | head -n50
 
