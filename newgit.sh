@@ -160,7 +160,7 @@ else
   
   # Get the author name
   if [ $DARWIN -eq 0 ] ; then
-    AUTH=$($MYGREP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    AUTH=$($MYGREP -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     AUTH=$(perl -nle'print $& while m{(?<=author=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -171,7 +171,7 @@ else
 
   # Get the email
   if [ $DARWIN -eq 0 ] ; then
-    EMAIL=$($MYGREP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    EMAIL=$($MYGREP -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     EMAIL=$(perl -nle'print $& while m{(?<=staffemail=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -221,7 +221,7 @@ else
   
   # Get gitlab authorisation token
   if [ $DARWIN -eq 0 ] ; then
-    TOKEN=$($MYGREP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    TOKEN=$($MYGREP -oP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     TOKEN=$(perl -nle'print $& while m{(?<=token=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -232,7 +232,7 @@ else
 
   # Get surrey usercode
   if [ $DARWIN -eq 0 ] ; then
-    USERCODE=$($MYGREP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
   else
     USERCODE=$(perl -nle'print $& while m{(?<=usercode=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
   fi
@@ -243,6 +243,8 @@ else
 
   # push to GitLab (created new project)
   echo -e $colBold"Pushing to GitLab..."$colClear
-  git push --set-upstream https://oauth2:$TOKEN@gitlab.eps.surrey.ac.uk/$USERCODE/$REPO_NAME.git master # HTTPS
+  git push --set-upstream https://oauth2:$TOKEN@gitlab.surrey.ac.uk/$USERCODE/$REPO_NAME.git master # HTTPS
+
+  headerOut "Clone elsewhere using SSH: git@gitlab.surrey.ac.uk:$USERCODE/$REPO_NAME.git"
 
 fi
