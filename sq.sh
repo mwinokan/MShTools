@@ -9,6 +9,7 @@ HEADERS=1
 PENDING=0
 RUNNING=0
 IDLE=0
+HISTORY=0
 
 if [[ $(hostname) == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
@@ -32,14 +33,16 @@ while test $# -gt 0; do
       echo -e $colArg"-u <USER>"$colClear" show USER's queue"
       echo -e $colArg"-q "$colClear" Show pending jobs for all users"
       echo -e $colArg"-i "$colClear" Show idle nodes"
-      echo -e $colArg"-a "$colClear" Show jobs about to end for all users"
+      echo -e $colArg"-a "$colClear" Show active jobs about to end for all users"
+      echo -e $colArg"-hist [<TIME_STR>]"$colClear" Show a user's history"
+      echo -e $colArg"-j <JOB_ID>"$colClear" Show job info"
       exit 1
       ;;
     -l)
       shift
       LOOP=1
       ;;
-    -nh)
+    -nh|--no-headers)
       shift
       HEADERS=0
       ;;
@@ -58,6 +61,10 @@ while test $# -gt 0; do
     -roisin)
       shift
       USERCODE=rg00700
+      ;;
+    -george)
+      shift
+      USERCODE=gf00304
       ;;
     -s)
       shift
@@ -78,10 +85,6 @@ while test $# -gt 0; do
       IDLE=1
       ;;
     -a|-r)
-      # shift
-      # squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t
-      # # squeue -S "f,e" -o "%.18i %.9P %.18j %.8u %.1T %.10M %.9l %e %.6D %f" | grep " R \|JOBID" | column -t
-      # exit 0
       shift
       RUNNING=1
       ;;
@@ -89,10 +92,23 @@ while test $# -gt 0; do
       shift
       PENDING=1
       ;;
+    --history|--hist)
+      shift
+      HISTORY=$1
+      shift
+      ;;
     -p)
       shift
       SHOW_PREV_NUM=$1
       shift
+      ;;
+    -j)
+      shift
+      JOB=$1
+      shift
+      ## show job info
+      scontrol show job $JOB
+      exit 0
       ;;
     *)
       echo -e $colError"Unknown flag: "$colArg$1$colClear
@@ -176,7 +192,7 @@ function show_time () {
   echo -e "$TIME_STRING"
 }
 
-function show_queue {
+function header_strings {
   # Header strings
   # HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear' $colVarType$colUnderline# Nodes"$colClear" "
   HDR_JOBID_NAME_NODES=$colUnderline$colBold"Job ID$colClear '$colUnderline"$colVarName"Job Name$colClear'               $colVarType$colUnderline# Nodes"$colClear" "
@@ -184,6 +200,10 @@ function show_queue {
   HDR_ELAPSED=$colResult$colUnderline"Elapsed$colClear"
   HDR_PART="("$colArg$colUnderline"partition$colClear)"
   HDR_LIMIT=$colResult$colUnderline"(Limit)$colClear "
+}
+
+function show_queue {
+  header_strings
 
   # get the queue and number of jobs
   # QUEUE=$(squeue -l -u $USERCODE)
@@ -280,6 +300,9 @@ function show_queue {
 
     done
   fi
+}
+
+function prev_queue {
 
   # Previous jobs  
   if [ $SHOW_PREV_NUM -gt 0 ] ; then
@@ -287,7 +310,7 @@ function show_queue {
     
     LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
     # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " | tail -n $SHOW_PREV_NUM > __temp__
+    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       "| tail -n $SHOW_PREV_NUM > __temp__
 
     if [ $SHORT -eq 0 ] ; then
       echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
@@ -364,6 +387,91 @@ function show_queue {
   rm __temp__* 2> /dev/null
 }
 
+function hist_queue {
+  header_strings
+
+  # Previous jobs  
+  LAST_WEEK_DATE=$(date --date="$HISTORY ago" +"%Y-%m-%d")
+  
+  echo -e $colBold$colFile"\nJobs since $LAST_WEEK_DATE:"$colClear
+  # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
+  sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " > __temp__
+
+  if [ $SHORT -eq 0 ] ; then
+    echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
+  else
+    echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear"
+  fi
+
+  while read -r LINE; do
+    JOB_ID=$(echo $LINE | awk '{print $1}')
+    JOB_NAME=$(echo $LINE | awk '{print $2}')
+    PARTITION=$(echo $LINE | awk '{print $3}')
+    STATUS=$(echo $LINE | awk '{print $4}')
+    if [[ $JOB_NAME == "bash" ]] ; then
+      if [[ $STATUS != "CANCELLED+" ]] ; then
+        STATUS="TERMINATED"
+      fi
+    fi
+    if [[ $JOB_NAME == "*.sh" ]] ; then
+      if [[ $STATUS != "CANCELLED+" ]] ; then
+        STATUS="TERMINATED"
+      fi
+    fi
+    if [[ $JOB_NAME == "sh" ]] ; then
+      if [[ $STATUS != "CANCELLED+" ]] ; then
+        STATUS="TERMINATED"
+      fi
+    fi
+    START=$(echo $LINE | awk '{print $5}')
+    ELAPSED=$(echo $LINE | awk '{print $6}')
+    MAX_TIME=$(echo $LINE | awk '{print $7}')
+    NUM_NODES=$(echo $LINE | awk '{print $8}')
+    NODES=$(echo $LINE | awk '{print $9}')
+
+    if [[ $STATUS == "COMPLETED" ]] ; then
+      ELAPSED_COLOR=$colSuccess
+    elif [[ $STATUS == "CANCELLED+" ]] ; then
+      ELAPSED_COLOR=$colWarning
+      STATUS="CANCELLED"
+    elif [[ $STATUS == "CANCELLED" ]] ; then
+      ELAPSED_COLOR=$colWarning
+    elif [[ $STATUS == "FAILED" ]] ; then
+      ELAPSED_COLOR=$colError
+    elif [[ $STATUS == "TIMEOUT" ]] ; then
+      ELAPSED_COLOR=$colError
+    else
+      ELAPSED_COLOR=$colResult
+    fi
+
+    START=$(date --date="$START" "+%b %-d`DaySuffix $START` %R")
+
+    START_LINE="              "
+    START=$START${START_LINE:${#START}}
+
+    JOB_NAME="'"$colVarName$JOB_NAME$colClear"'""${NAME_LINE:${#JOB_NAME}}"
+    ELAPSED=$(convert4showtime $ELAPSED)
+    STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
+
+    PARTITION_LINE="                                                            "
+    PARTITION_STR="("$colArg$PARTITION$colClear":"$colArg$NODES$colClear")"
+    PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_STR}}
+
+    if [ $SHORT -eq 0 ] ; then
+      if [[ $ELAPSED == "" ]] ; then
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" pre-start"$colClear
+      else
+        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS", "$ELAPSED_COLOR$ELAPSED$colClear
+      fi
+    else
+      echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
+    fi
+  done < __temp__
+
+  # rm __temp__* 2> /dev/null
+
+}
+
 function pend_queue {
   squeue -l | head -n2
   echo -ne $colBold
@@ -401,7 +509,7 @@ function running_queue {
   SBBLUE=$(printf '%s\n' "$cBBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
 
   QUEUE=$(squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t)
-  QUEUE=$(echo "$QUEUE" | sed "s/$USERCODE/$SBOLD""$USERCODE""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/cv00220/$SYELLOW""cv00220""$SCLEAR/" | sed "s/chemistry_25/$SCYAN""chemistry_25""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
+  QUEUE=$(echo "$QUEUE" | sed "s/$USERCODE/$SBOLD""$USERCODE""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/cv00220/$SYELLOW""cv00220""$SCLEAR/" | sed "s/chemistry_30/$SCYAN""chemistry_30""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
 
   echo -e "$QUEUE" | head -n50
 
@@ -453,7 +561,15 @@ DaySuffix() {
     esac
 }
 
-if [ $PENDING -eq 1 ] ; then
+if [ "$HISTORY" != "0" ] ; then
+  if [ "$HISTORY" == "" ] ; then
+    HISTORY="6 months"
+  fi
+
+  # echo "UNSUPPORTED"
+  hist_queue
+
+elif [ $PENDING -eq 1 ] ; then
 
   if [ $LOOP -eq 1 ] ; then
     while :
@@ -505,11 +621,13 @@ else
     do
       clear
       show_queue
+      prev_queue
       echo -e "\nPress [CTRL+C] to stop.."
       sleep 1.0
     done
   else
     show_queue
+    prev_queue
   fi
   exit 0
 
