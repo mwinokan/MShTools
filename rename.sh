@@ -9,7 +9,11 @@ while test $# -gt 0; do
   case "$1" in
     -h|--help|-u|--usage)
       echo -e "Usage for "$colFunc"rename.sh"$colClear":"
-      echo -e $colArg"-l"$colClear" loop indefinitely"
+      echo -e $colArg"-d <FOLDER>"$colClear" directory within which to rename files"
+      echo -e $colArg"-m <MATCH>"$colClear" filenames must contain MATCH"
+      echo -e $colArg"-i <INSTR>"$colClear" target string to replace"
+      echo -e $colArg"-o <OUTSTR>"$colClear" string that will be put in INSTR's place"
+      echo -e $colArg"-t"$colClear" perform a dry-run (don't rename files)"
       exit 1
       ;;
     -d|--directory)
