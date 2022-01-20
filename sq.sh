@@ -10,6 +10,7 @@ PENDING=0
 RUNNING=0
 IDLE=0
 HISTORY=0
+JOB=0
 
 if [[ $(hostname) == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
@@ -92,7 +93,7 @@ while test $# -gt 0; do
       shift
       PENDING=1
       ;;
-    --history|--hist)
+    -hist|--history|--hist)
       shift
       HISTORY=$1
       shift
@@ -107,8 +108,8 @@ while test $# -gt 0; do
       JOB=$1
       shift
       ## show job info
-      scontrol show job $JOB
-      exit 0
+      # scontrol show job $JOB
+      # exit 0
       ;;
     *)
       echo -e $colError"Unknown flag: "$colArg$1$colClear
@@ -516,6 +517,116 @@ function running_queue {
   # echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
 }
 
+function job_info {
+
+  JOB_BUFFER=$(scontrol show job $JOB)
+
+  NUM_LINES=$(echo "$JOB_BUFFER" | wc -l)
+
+  if [ $NUM_LINES -eq 1 ] ; then
+    errorOut "Previous jobs unsupported"
+    exit 1
+  fi
+
+  # echo "$JOB_BUFFER"
+
+  JOB_NAME=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobName=).*")
+  
+  varOutEx "Pending Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+
+  USERCODE=$(echo "$JOB_BUFFER" | sed 's/(/|/' | grep -oP "(?<=UserId=).*(?=\|)")
+  ACCOUNT=$(echo "$JOB_BUFFER" | grep -oP "(?<=Account=).*(?= QOS)")
+  varOutEx "       User" "$USERCODE" "$ACCOUNT" $colBold $colArg
+
+  JOB_STATE=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobState=).*(?= Reason)")
+
+  PARTITION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Partition=).*(?= AllocNode)")
+  varOut "  Partition" "$PARTITION" "" $colArg
+
+  if [ "$JOB_STATE" == "PENDING" ] ; then
+    NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=SchedNodeList=).*")
+    NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?=-)")
+  else
+    NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=   NodeList=).*")
+    NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?= NumCPUs)")
+  fi
+
+  if [ "$NODELIST" == "" ] ; then
+    varOut "    # Nodes" "$NUM_NODES nodes" "" $colVarType
+  else
+    varOutEx "    # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
+  fi
+  
+  NUM_CPUS=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumCPUs=).*(?= NumTasks)")
+  varOut "      #CPUs" "$NUM_CPUS" "" $colVarType
+
+  DEPENDENCY=$(echo "$JOB_BUFFER" | grep -oP "(?<=Dependency=).*")
+  if [ "$DEPENDENCY" != "(null)" ] ; then
+    varOut " Dependency" "$DEPENDENCY" "" $colArg
+  fi
+
+  FEATURES=$(echo "$JOB_BUFFER" | grep -oP "(?<=Features=).*(?= DelayBoot)")
+  if [ "$FEATURES" != "(null)" ] ; then
+    varOut "   Features" "$FEATURES"
+  fi
+
+  RESERVATION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Reservation=).*")
+  if [ "$RESERVATION" != "(null)" ] ; then
+    varOut "Reservation" "$RESERVATION" "" $colArg
+  fi
+
+  ### Timings
+
+  TIME_LIMIT=$(echo "$JOB_BUFFER" | grep -oP "(?<=TimeLimit=).*(?= TimeMin)")
+  TIME_LIMIT=$(convert4showtime $TIME_LIMIT)
+
+  if [ "$JOB_STATE" == "RUNNING" ] ; then
+    ELAPSED=$(echo "$JOB_BUFFER" | grep -oP "(?<=RunTime=).*(?= TimeLimit)")
+    ELAPSED=$(convert4showtime $ELAPSED)
+    varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
+  else
+    varOut "      Limit" "$TIME_LIMIT" "" $colResult
+  
+    REMAINING=$(echo "$JOB_BUFFER" | grep -oP "(?<=StartTime=).*(?= EndTime)")
+
+    if [[ "$REMAINING" != *"N/A"* ]] ; then
+      if [[ "$REMAINING" != *"Unknown"* ]] ; then
+        REMAINING=$(( $(date +%s -d "$REMAINING") - $( date +%s ) ))
+        REMAINING=$(show_time $REMAINING)
+      fi
+    else
+      REMAINING="N/A"
+    fi
+    varOut "Approx Wait" "$REMAINING" "" $colResult
+
+    QUEUE=$(echo "$JOB_BUFFER" | grep -oP "(?<=SubmitTime=).*(?= Eligible)")
+
+    if [[ "$QUEUE" != *"N/A"* ]] ; then
+      QUEUE=$(( $( date +%s ) - $(date +%s -d "$QUEUE")))
+      QUEUE=$(show_time $QUEUE)
+    else
+      QUEUE="N/A"
+    fi
+    varOut " Queue Time" "$QUEUE" "" $colResult
+
+  fi
+
+  WORKDIR=$(echo "$JOB_BUFFER" | grep -oP "(?<=WorkDir=).*")
+  varOut "  Directory" "$WORKDIR" "" $colFile
+
+  COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
+  varOut "     Script" "$COMMAND" "" $colFile
+
+  # Extra Fields
+  # Endtime?
+  # Exclusive?
+  # mem
+  # Priority?
+  # StdErr
+  # StdOut
+  
+}
+
 # https://stackoverflow.com/questions/2495459/formatting-the-date-in-unix-to-include-suffix-on-day-st-nd-rd-and-th
 DaySuffix() {
     START=$1
@@ -561,7 +672,11 @@ DaySuffix() {
     esac
 }
 
-if [ "$HISTORY" != "0" ] ; then
+if [ $JOB -ne 0 ] ; then
+
+  job_info
+
+elif [ "$HISTORY" != "0" ] ; then
   if [ "$HISTORY" == "" ] ; then
     HISTORY="6 months"
   fi
