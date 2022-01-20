@@ -20,6 +20,11 @@ function varOut {
   echo -e "$colVarName$1$colClear: $4$2 $colVarType$3 $colClear"
 }
 
+# varOut <NAME> <VALUE> <EXVALUE> [<VALUE_COL_STRING>] [<EXVALUE_COL_STRING>]
+function varOutEx {
+  echo -e "$colVarName$1$colClear: $4$2$colClear ($5$3$colClear)"
+}
+
 # returnOut <COMMENT> <RETURN_VALUE> [<COMMENT>]
 function returnOut {
   if [ $2 -eq 0 ] ; then 
