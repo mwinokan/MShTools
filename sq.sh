@@ -213,7 +213,7 @@ function show_queue {
 
   # get the queue and number of jobs
   # QUEUE=$(squeue -l -u $USERCODE)
-  QUEUE=$(squeue -o "%.18i %.9P %.22j %.8u %.8T %.10M %.9l %.6D %R" -u $USERCODE)
+  QUEUE=$(squeue -o "%.18i %.9P %.22j %.8u %.8T %.10M %.9l %.6D %R %v" -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
 
@@ -259,11 +259,21 @@ function show_queue {
 
       NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $8}')
       NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
+
+
       if [ $SHORT -eq 1 ] ; then
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$TIME"$colClear
+        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$TIME"$colClear
       else
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear""$TIME_STRING"" ""($colArg$PARTITION$colClear:$colArg$NODELIST$colClear)"
+        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear""$TIME_STRING"" ""($colArg$PARTITION$colClear:$colArg$NODELIST$colClear)"
       fi
+
+      RESERVATION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $10}')
+      if [[ $RESERVATION = "chemistry_30" ]] ; then
+        echo -e $colBold$cCYAN" chem_30"$colClear
+      else  
+        echo -e ""
+      fi
+      # echo $RESERVATION
     done
   fi
 
@@ -281,7 +291,7 @@ function show_queue {
     fi
 
     # QUEUE=$(squeue --start -u $USERCODE)
-    QUEUE=$(squeue --start --format="%.18i %.9P %.22j %.8u %.2t %.19S %.6D %20Y %R" -u $USERCODE)
+    QUEUE=$(squeue --start --format="%.18i %.9P %.22j %.8u %.2t %.19S %.6D %20Y %R %v" -u $USERCODE)
     # echo $QUEUE
     JOBIDS=$(echo -e "$QUEUE" | grep "PD" | awk '{print $1}')
     for JOB in $JOBIDS; do
@@ -293,16 +303,26 @@ function show_queue {
 
       if [[ "$START_TIME" != *"N/A"* ]] ; then
         REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
-        REMAINING=$(show_time $REMAINING)
+        REMAINING=$(show_time $REMAINING | xargs)
         REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
       else
-        REMAINING="N/A"${TIME_LINE:3}
+        # REMAINING="N/A"${TIME_LINE:3}
+        REMAINING="N/A"
+        REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
       fi
       if [ $SHORT -eq 1 ] ; then
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
+        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
       else
-        echo -e $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
+        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
       fi
+
+      RESERVATION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $10}')
+      if [[ $RESERVATION != "(null)" ]] ; then
+        echo -e $colBold$cCYAN" *"$colClear
+      else  
+        echo -e ""
+      fi
+      # echo $RESERVATION
 
     done
   fi
@@ -374,9 +394,10 @@ function prev_queue {
       ELAPSED=$(convert4showtime $ELAPSED)
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
 
-      PARTITION_LINE="                                                            "
+      PARTITION_LINE="                        "
       PARTITION_STR="("$colArg$PARTITION$colClear":"$colArg$NODES$colClear")"
-      PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_STR}}
+      PARTITION_TEMPSTR="("$PARTITION":"$NODES")"
+      PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_TEMPSTR}}
 
       if [ $SHORT -eq 0 ] ; then
         if [[ $ELAPSED == "" ]] ; then
@@ -564,49 +585,63 @@ function job_info {
     JOB_NAME=${INFO_ARR[0]}
 
     if [ "$JOB_STATE" == "COMPLETED" ] ; then
-      varOutEx "   Past Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+      varOutEx "Completed Job" "$JOB_NAME" "$JOB" $colVarName $colBold
     elif [ "$JOB_STATE" == "FAILED" ] ; then
-      varOutEx " Failed Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+      varOutEx "   Failed Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    elif [[ "$JOB_STATE" == "CANCELLED"* ]] ; then
+      varOutEx "Cancelled Job" "$JOB_NAME" "$JOB" $colVarName $colBold
     else
       errorOut $JOB_STATE
     fi
 
     ACCOUNT=${INFO_ARR[2]}
     USERCODE=${INFO_ARR[1]}
-    varOutEx "       User" "$USERCODE" "$ACCOUNT" $colBold $colArg
+    varOutEx "         User" "$USERCODE" "$ACCOUNT" $colBold $colArg
 
     PARTITION=${INFO_ARR[4]}
-    varOut "  Partition" "$PARTITION" "" $colArg
+    varOut "    Partition" "$PARTITION" "" $colArg
 
     NUM_NODES=${INFO_ARR[5]}
     NODELIST=${INFO_ARR[6]}
-    varOutEx "    # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
+    varOutEx "      # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
 
     NUM_CPUS=${INFO_ARR[7]}
-    varOut "      #CPUs" "$NUM_CPUS" "" $colVarType
+    varOut "        #CPUs" "$NUM_CPUS" "" $colVarType
 
     RESERVATION=${INFO_ARR[8]}
     if [ "$RESERVATION" != "" ] ; then
-      varOut "Reservation" "$RESERVATION" "" $colArg
+      varOut "  Reservation" "$RESERVATION" "" $colArg
     fi
 
     TIME_LIMIT=${INFO_ARR[9]}
-    TIME_LIMIT=$(convert4showtime $TIME_LIMIT | xargs)      
-    ELAPSED=${INFO_ARR[11]}
-    ELAPSED=$(convert4showtime $ELAPSED | xargs)
-    varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
-    
+    TIME_LIMIT=$(convert4showtime $TIME_LIMIT | xargs)     
+
+    if [[ "$JOB_STATE" == "CANCELLED"* ]] ; then
+      varOut "        Limit" "$TIME_LIMIT" "" $colResult
+    else
+      ELAPSED=${INFO_ARR[11]}
+      ELAPSED=$(convert4showtime $ELAPSED | xargs)
+      varOutEx "     Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
+    fi
+
     IFS=":"
     read -ra EXIT_ARR <<< "${INFO_ARR[10]}"
     EXIT_CODE=${EXIT_ARR[0]}
     if [ $EXIT_CODE -ne 0 ] ; then
-      varOut "  Exit Code" "$EXIT_CODE" "" $colError
+      varOut "    Exit Code" "$EXIT_CODE" "" $colError
     else
-      varOut "  Exit Code" "$EXIT_CODE" "" $colSuccess
+      varOut "    Exit Code" "$EXIT_CODE" "" $colSuccess
     fi
 
-
-    exit 1
+    if [ "$JOB_STATE" == "COMPLETED" ] ; then
+      varOut "       Status" "Completed " "" $colSuccess
+    elif [ "$JOB_STATE" == "FAILED" ] ; then
+      varOut "       Status" "Failed " "" $colError
+    elif [[ "$JOB_STATE" == "CANCELLED by"* ]] ; then
+      varOut "       Status" "Cancelled Pre-Start " "" $colWarning
+    else
+      errorOut $JOB_STATE
+    fi
   
   else
 
@@ -701,6 +736,15 @@ function job_info {
 
     COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
     varOut "     Script" "$COMMAND" "" $colFile
+
+    if [ "$DEPENDENCY" != "(null)" ] ; then
+      IFS=":"
+      read -ra DEP_ARR <<< "$DEPENDENCY"
+      DEPENDENCY=${DEP_ARR[1]}
+      headerOut "\nDependency $DEPENDENCY:"
+      JOB=$DEPENDENCY
+      job_info
+    fi
 
   fi
 
