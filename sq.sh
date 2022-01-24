@@ -8,6 +8,7 @@ SHORT=0
 HEADERS=1
 PENDING=0
 RUNNING=0
+CLUSTER=0
 IDLE=0
 HISTORY=0
 JOB=0
@@ -80,6 +81,10 @@ while test $# -gt 0; do
       shift
       sinfo
       exit
+      ;;
+    -c)
+      shift
+      CLUSTER=1
       ;;
     -i|-idle|--idle)
       shift
@@ -470,7 +475,6 @@ function hist_queue {
   done < __temp__
 
   # rm __temp__* 2> /dev/null
-
 }
 
 function pend_queue {
@@ -517,105 +521,219 @@ function running_queue {
   # echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
 }
 
+function cluster_info {
+
+  sinfo -N
+
+  # categories
+
+  # debug
+
+  # 
+
+}
+
 function job_info {
 
-  JOB_BUFFER=$(scontrol show job $JOB)
+  JOB_BUFFER=$(scontrol show job $JOB 2>&1)
 
   NUM_LINES=$(echo "$JOB_BUFFER" | wc -l)
 
   if [ $NUM_LINES -eq 1 ] ; then
-    errorOut "Previous jobs unsupported"
-    exit 1
-  fi
 
-  # echo "$JOB_BUFFER"
+    # errorOut "Previous jobs unsupported"
+    # sacct -X -j $JOB
+    
+    STR_BUFFER=$(sacct -X -j $JOB -o JobName,User,Account,State,Partition,NNodes,NodeList,NCPUS,Reservation,Timelimit,ExitCode -p | tail -n 1)
 
-  JOB_NAME=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobName=).*")
-  
-  varOutEx "Pending Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    IFS="|"
 
-  USERCODE=$(echo "$JOB_BUFFER" | sed 's/(/|/' | grep -oP "(?<=UserId=).*(?=\|)")
-  ACCOUNT=$(echo "$JOB_BUFFER" | grep -oP "(?<=Account=).*(?= QOS)")
-  varOutEx "       User" "$USERCODE" "$ACCOUNT" $colBold $colArg
+    read -ra INFO_ARR <<< "$STR_BUFFER"
 
-  JOB_STATE=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobState=).*(?= Reason)")
+    # ${ARRAY_NAME[2]}
 
-  PARTITION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Partition=).*(?= AllocNode)")
-  varOut "  Partition" "$PARTITION" "" $colArg
+    # JobName X
+    # UserId > User
+    # Account X
+    # JobState > State
+    # Partition X
+    # NumNodes > NNodes
+    # NodeList X
+    # NumCPUs > NCPUS
+    # Dependency ???
+    # Features ???
+    # Reservation X
+    # TimeLimit > Timelimit
+    # RunTime ???
+    # StartTime ???
+    # SubmitTime ???
+    # WorkDir ???
+    # Command ???
+    # ExitCode +
 
-  if [ "$JOB_STATE" == "PENDING" ] ; then
-    NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=SchedNodeList=).*")
-    NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?=-)")
-  else
-    NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=   NodeList=).*")
-    NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?= NumCPUs)")
-  fi
+    # Account           AdminComment      AllocCPUS         AllocGRES        
+    # AllocNodes        AllocTRES         AssocID           AveCPU           
+    # AveCPUFreq        AveDiskRead       AveDiskWrite      AvePages         
+    # AveRSS            AveVMSize         BlockID           Cluster          
+    # Comment           ConsumedEnergy    ConsumedEnergyRaw CPUTime          
+    # CPUTimeRAW        DerivedExitCode   Elapsed           ElapsedRaw       
+    # Eligible          End               ExitCode          GID              
+    # Group             JobID             JobIDRaw          JobName          
+    # Layout            MaxDiskRead       MaxDiskReadNode   MaxDiskReadTask  
+    # MaxDiskWrite      MaxDiskWriteNode  MaxDiskWriteTask  MaxPages         
+    # MaxPagesNode      MaxPagesTask      MaxRSS            MaxRSSNode       
+    # MaxRSSTask        MaxVMSize         MaxVMSizeNode     MaxVMSizeTask    
+    # MinCPU            MinCPUNode        MinCPUTask        NCPUS            
+    # NNodes            NodeList          NTasks            Priority         
+    # Partition         QOS               QOSRAW            ReqCPUFreq       
+    # ReqCPUFreqMin     ReqCPUFreqMax     ReqCPUFreqGov     ReqCPUS          
+    # ReqGRES           ReqMem            ReqNodes          ReqTRES          
+    # Reservation       ReservationId     Reserved          ResvCPU          
+    # ResvCPURAW        Start             State             Submit           
+    # Suspended         SystemCPU         Timelimit         TotalCPU         
+    # UID               User              UserCPU           WCKey            
+    # WCKeyID          
 
-  if [ "$NODELIST" == "" ] ; then
-    varOut "    # Nodes" "$NUM_NODES nodes" "" $colVarType
-  else
+    JOB_STATE=${INFO_ARR[3]}
+    JOB_NAME=${INFO_ARR[0]}
+
+    if [ "$JOB_STATE" == "COMPLETED" ] ; then
+      varOutEx "   Past Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    elif [ "$JOB_STATE" == "FAILED" ] ; then
+      varOutEx " Failed Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    else
+      errorOut $JOB_STATE
+    fi
+
+    ACCOUNT=${INFO_ARR[2]}
+    USERCODE=${INFO_ARR[1]}
+    varOutEx "       User" "$USERCODE" "$ACCOUNT" $colBold $colArg
+
+    PARTITION=${INFO_ARR[4]}
+    varOut "  Partition" "$PARTITION" "" $colArg
+
+    NUM_NODES=${INFO_ARR[5]}
+    NODELIST=${INFO_ARR[6]}
     varOutEx "    # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
-  fi
-  
-  NUM_CPUS=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumCPUs=).*(?= NumTasks)")
-  varOut "      #CPUs" "$NUM_CPUS" "" $colVarType
 
-  DEPENDENCY=$(echo "$JOB_BUFFER" | grep -oP "(?<=Dependency=).*")
-  if [ "$DEPENDENCY" != "(null)" ] ; then
-    varOut " Dependency" "$DEPENDENCY" "" $colArg
-  fi
+    NUM_CPUS=${INFO_ARR[7]}
+    varOut "      #CPUs" "$NUM_CPUS" "" $colVarType
 
-  FEATURES=$(echo "$JOB_BUFFER" | grep -oP "(?<=Features=).*(?= DelayBoot)")
-  if [ "$FEATURES" != "(null)" ] ; then
-    varOut "   Features" "$FEATURES"
-  fi
+    RESERVATION=${INFO_ARR[8]}
+    if [ "$RESERVATION" != "" ] ; then
+      varOut "Reservation" "$RESERVATION" "" $colArg
+    fi
 
-  RESERVATION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Reservation=).*")
-  if [ "$RESERVATION" != "(null)" ] ; then
-    varOut "Reservation" "$RESERVATION" "" $colArg
-  fi
-
-  ### Timings
-
-  TIME_LIMIT=$(echo "$JOB_BUFFER" | grep -oP "(?<=TimeLimit=).*(?= TimeMin)")
-  TIME_LIMIT=$(convert4showtime $TIME_LIMIT)
-
-  if [ "$JOB_STATE" == "RUNNING" ] ; then
-    ELAPSED=$(echo "$JOB_BUFFER" | grep -oP "(?<=RunTime=).*(?= TimeLimit)")
-    ELAPSED=$(convert4showtime $ELAPSED)
-    varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
-  else
+    TIME_LIMIT=${INFO_ARR[9]}
+    TIME_LIMIT=$(convert4showtime $TIME_LIMIT)
     varOut "      Limit" "$TIME_LIMIT" "" $colResult
+    
+    IFS=":"
+    read -ra EXIT_ARR <<< "${INFO_ARR[10]}"
+    EXIT_CODE=${EXIT_ARR[0]}
+    if [ $EXIT_CODE -ne 0 ] ; then
+      varOut "  Exit Code" "$EXIT_CODE" "" $colError
+    else
+      varOut "  Exit Code" "$EXIT_CODE" "" $colSuccess
+    fi
+
+    exit 1
   
-    REMAINING=$(echo "$JOB_BUFFER" | grep -oP "(?<=StartTime=).*(?= EndTime)")
+  else
 
-    if [[ "$REMAINING" != *"N/A"* ]] ; then
-      if [[ "$REMAINING" != *"Unknown"* ]] ; then
-        REMAINING=$(( $(date +%s -d "$REMAINING") - $( date +%s ) ))
-        REMAINING=$(show_time $REMAINING)
+    # echo "$JOB_BUFFER"
+
+    JOB_NAME=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobName=).*")
+    JOB_STATE=$(echo "$JOB_BUFFER" | grep -oP "(?<=JobState=).*(?= Reason)")
+    
+    if [ "$JOB_STATE" == "PENDING" ] ; then
+      varOutEx "Pending Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    else
+      varOutEx "Running Job" "$JOB_NAME" "$JOB" $colVarName $colBold
+    fi
+
+    USERCODE=$(echo "$JOB_BUFFER" | sed 's/(/|/' | grep -oP "(?<=UserId=).*(?=\|)")
+    ACCOUNT=$(echo "$JOB_BUFFER" | grep -oP "(?<=Account=).*(?= QOS)")
+    varOutEx "       User" "$USERCODE" "$ACCOUNT" $colBold $colArg
+
+    PARTITION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Partition=).*(?= AllocNode)")
+    varOut "  Partition" "$PARTITION" "" $colArg
+
+    if [ "$JOB_STATE" == "PENDING" ] ; then
+      NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=SchedNodeList=).*")
+      NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?=-)")
+    else
+      NODELIST=$(echo "$JOB_BUFFER" | grep -oP "(?<=   NodeList=).*")
+      NUM_NODES=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumNodes=).*(?= NumCPUs)")
+    fi
+
+    if [ "$NODELIST" == "" ] ; then
+      varOut "    # Nodes" "$NUM_NODES nodes" "" $colVarType
+    else
+      varOutEx "    # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
+    fi
+    
+    NUM_CPUS=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumCPUs=).*(?= NumTasks)")
+    varOut "      #CPUs" "$NUM_CPUS" "" $colVarType
+
+    DEPENDENCY=$(echo "$JOB_BUFFER" | grep -oP "(?<=Dependency=).*")
+    if [ "$DEPENDENCY" != "(null)" ] ; then
+      varOut " Dependency" "$DEPENDENCY" "" $colArg
+    fi
+
+    FEATURES=$(echo "$JOB_BUFFER" | grep -oP "(?<=Features=).*(?= DelayBoot)")
+    if [ "$FEATURES" != "(null)" ] ; then
+      varOut "   Features" "$FEATURES"
+    fi
+
+    RESERVATION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Reservation=).*")
+    if [ "$RESERVATION" != "(null)" ] ; then
+      varOut "Reservation" "$RESERVATION" "" $colArg
+    fi
+
+    ### Timings
+
+    TIME_LIMIT=$(echo "$JOB_BUFFER" | grep -oP "(?<=TimeLimit=).*(?= TimeMin)")
+    TIME_LIMIT=$(convert4showtime $TIME_LIMIT)
+
+    if [ "$JOB_STATE" == "RUNNING" ] ; then
+      ELAPSED=$(echo "$JOB_BUFFER" | grep -oP "(?<=RunTime=).*(?= TimeLimit)")
+      ELAPSED=$(convert4showtime $ELAPSED)
+      varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
+    else
+      varOut "      Limit" "$TIME_LIMIT" "" $colResult
+    
+      REMAINING=$(echo "$JOB_BUFFER" | grep -oP "(?<=StartTime=).*(?= EndTime)")
+
+      if [[ "$REMAINING" != *"N/A"* ]] ; then
+        if [[ "$REMAINING" != *"Unknown"* ]] ; then
+          REMAINING=$(( $(date +%s -d "$REMAINING") - $( date +%s ) ))
+          REMAINING=$(show_time $REMAINING)
+        fi
+      else
+        REMAINING="N/A"
       fi
-    else
-      REMAINING="N/A"
-    fi
-    varOut "Approx Wait" "$REMAINING" "" $colResult
+      varOut "Approx Wait" "$REMAINING" "" $colResult
 
-    QUEUE=$(echo "$JOB_BUFFER" | grep -oP "(?<=SubmitTime=).*(?= Eligible)")
+      QUEUE=$(echo "$JOB_BUFFER" | grep -oP "(?<=SubmitTime=).*(?= Eligible)")
 
-    if [[ "$QUEUE" != *"N/A"* ]] ; then
-      QUEUE=$(( $( date +%s ) - $(date +%s -d "$QUEUE")))
-      QUEUE=$(show_time $QUEUE)
-    else
-      QUEUE="N/A"
+      if [[ "$QUEUE" != *"N/A"* ]] ; then
+        QUEUE=$(( $( date +%s ) - $(date +%s -d "$QUEUE")))
+        QUEUE=$(show_time $QUEUE)
+      else
+        QUEUE="N/A"
+      fi
+      varOut " Queue Time" "$QUEUE" "" $colResult
+
     fi
-    varOut " Queue Time" "$QUEUE" "" $colResult
+
+    WORKDIR=$(echo "$JOB_BUFFER" | grep -oP "(?<=WorkDir=).*")
+    varOut "  Directory" "$WORKDIR" "" $colFile
+
+    COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
+    varOut "     Script" "$COMMAND" "" $colFile
 
   fi
-
-  WORKDIR=$(echo "$JOB_BUFFER" | grep -oP "(?<=WorkDir=).*")
-  varOut "  Directory" "$WORKDIR" "" $colFile
-
-  COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
-  varOut "     Script" "$COMMAND" "" $colFile
 
   # Extra Fields
   # Endtime?
@@ -672,7 +790,11 @@ DaySuffix() {
     esac
 }
 
-if [ $JOB -ne 0 ] ; then
+if [ $CLUSTER -ne 0 ] ; then
+
+  cluster_info
+
+elif [ $JOB -ne 0 ] ; then
 
   job_info
 
@@ -681,7 +803,6 @@ elif [ "$HISTORY" != "0" ] ; then
     HISTORY="6 months"
   fi
 
-  # echo "UNSUPPORTED"
   hist_queue
 
 elif [ $PENDING -eq 1 ] ; then
