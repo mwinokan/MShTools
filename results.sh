@@ -52,6 +52,8 @@ else
   JOB_NUM=$1
 fi
 
+sq.sh -j $JOB_NUM
+
 FILE_PATTERN=$JOB_NUM
 
 JOB_NUM=$(basename $JOB_NUM)
