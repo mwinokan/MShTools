@@ -544,7 +544,7 @@ function job_info {
     # errorOut "Previous jobs unsupported"
     # sacct -X -j $JOB
     
-    STR_BUFFER=$(sacct -X -j $JOB -o JobName,User,Account,State,Partition,NNodes,NodeList,NCPUS,Reservation,Timelimit,ExitCode -p | tail -n 1)
+    STR_BUFFER=$(sacct -X -j $JOB -o JobName,User,Account,State,Partition,NNodes,NodeList,NCPUS,Reservation,Timelimit,ExitCode,elapsed -p | tail -n 1)
 
     IFS="|"
 
@@ -552,47 +552,13 @@ function job_info {
 
     # ${ARRAY_NAME[2]}
 
-    # JobName X
-    # UserId > User
-    # Account X
-    # JobState > State
-    # Partition X
-    # NumNodes > NNodes
-    # NodeList X
-    # NumCPUs > NCPUS
     # Dependency ???
     # Features ???
-    # Reservation X
-    # TimeLimit > Timelimit
     # RunTime ???
     # StartTime ???
     # SubmitTime ???
     # WorkDir ???
     # Command ???
-    # ExitCode +
-
-    # Account           AdminComment      AllocCPUS         AllocGRES        
-    # AllocNodes        AllocTRES         AssocID           AveCPU           
-    # AveCPUFreq        AveDiskRead       AveDiskWrite      AvePages         
-    # AveRSS            AveVMSize         BlockID           Cluster          
-    # Comment           ConsumedEnergy    ConsumedEnergyRaw CPUTime          
-    # CPUTimeRAW        DerivedExitCode   Elapsed           ElapsedRaw       
-    # Eligible          End               ExitCode          GID              
-    # Group             JobID             JobIDRaw          JobName          
-    # Layout            MaxDiskRead       MaxDiskReadNode   MaxDiskReadTask  
-    # MaxDiskWrite      MaxDiskWriteNode  MaxDiskWriteTask  MaxPages         
-    # MaxPagesNode      MaxPagesTask      MaxRSS            MaxRSSNode       
-    # MaxRSSTask        MaxVMSize         MaxVMSizeNode     MaxVMSizeTask    
-    # MinCPU            MinCPUNode        MinCPUTask        NCPUS            
-    # NNodes            NodeList          NTasks            Priority         
-    # Partition         QOS               QOSRAW            ReqCPUFreq       
-    # ReqCPUFreqMin     ReqCPUFreqMax     ReqCPUFreqGov     ReqCPUS          
-    # ReqGRES           ReqMem            ReqNodes          ReqTRES          
-    # Reservation       ReservationId     Reserved          ResvCPU          
-    # ResvCPURAW        Start             State             Submit           
-    # Suspended         SystemCPU         Timelimit         TotalCPU         
-    # UID               User              UserCPU           WCKey            
-    # WCKeyID          
 
     JOB_STATE=${INFO_ARR[3]}
     JOB_NAME=${INFO_ARR[0]}
@@ -625,8 +591,10 @@ function job_info {
     fi
 
     TIME_LIMIT=${INFO_ARR[9]}
-    TIME_LIMIT=$(convert4showtime $TIME_LIMIT)
-    varOut "      Limit" "$TIME_LIMIT" "" $colResult
+    TIME_LIMIT=$(convert4showtime $TIME_LIMIT | xargs)      
+    ELAPSED=${INFO_ARR[11]}
+    ELAPSED=$(convert4showtime $ELAPSED | xargs)
+    varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
     
     IFS=":"
     read -ra EXIT_ARR <<< "${INFO_ARR[10]}"
@@ -636,6 +604,7 @@ function job_info {
     else
       varOut "  Exit Code" "$EXIT_CODE" "" $colSuccess
     fi
+
 
     exit 1
   
