@@ -16,6 +16,7 @@ SHOW_GITHUB=1
 SEARCH=0
 UPDATE=0
 PULL=0
+NO_WD=0
 
 # Parse arguments:
 while test $# -gt 0; do
@@ -50,6 +51,10 @@ while test $# -gt 0; do
     -ng|--no-github)
       shift
       SHOW_GITHUB=0
+      ;;
+    -nwd|--no-wd)
+      shift
+      NO_WD=1
       ;;
     -n|--name)
       SEARCH=1
@@ -103,6 +108,12 @@ echo -e "$ALL_GITS" > __temp__
 
 # Loop through all .git paths
 while IFS= read -r GIT; do
+
+  if [ $NO_WD -eq 1 ] ; then
+    if [[ $GIT == *"WD_"* ]] ; then
+      continue
+    fi
+  fi
 
   # echo -e $colBold $GIT $colClear
 
