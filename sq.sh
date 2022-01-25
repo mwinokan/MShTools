@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# To-Do's
+#  - Show node category in running queue
+
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
@@ -521,25 +524,79 @@ function idle_queue {
   echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
 }
 
+function replace_usercodes {
+
+  USER=$1
+
+  USER=$(echo $USER | sed 's/mw00368/max/')
+  USER=$(echo $USER | sed 's/ls00338/louie/')
+  USER=$(echo $USER | sed 's/cv00220/cedric/')
+  USER=$(echo $USER | sed 's/rg00700/roisin/')
+  USER=$(echo $USER | sed 's/gf00304/george/')
+      
+  echo $USER
+
+}
+
 function running_queue {
-  SBOLD=$(printf '%s\n' "$colBold" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SCLEAR=$(printf '%s\n' "$colClear" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SFAINT=$(printf '%s\n' "$cFAINT" | sed -e 's/[]\/$*.^[]/\\&/g')
 
-  SRED=$(printf '%s\n' "$cRED" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SGREEN=$(printf '%s\n' "$cGREEN" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SBLUE=$(printf '%s\n' "$cBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SCYAN=$(printf '%s\n' "$cCYAN" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SYELLOW=$(printf '%s\n' "$cYELLOW" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SMAGENTA=$(printf '%s\n' "$cMAGENTA" | sed -e 's/[]\/$*.^[]/\\&/g')
-  SBBLUE=$(printf '%s\n' "$cBBLUE" | sed -e 's/[]\/$*.^[]/\\&/g')
+  RAW_HEADER="$colUnderline$colBold""User$colClear|$colBold$colUnderline"
+  RAW_HEADER=$RAW_HEADER"JobID$colClear|"
+  RAW_HEADER=$RAW_HEADER$colUnderline$colResult"End Time$colClear|"
+  RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#Node$colClear|"
+  RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#CPU$colClear|"
+  RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+  RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Features$colClear\n"
 
-  QUEUE=$(squeue -S "f,e" -o " %.9P %.1T %.6D %f %e %N %v %u" | grep " R \|END_TIME" | sed 's/ R / /' | sed 's/ S / /' | column -t)
-  QUEUE=$(echo "$QUEUE" | sed "s/$USERCODE/$SBOLD""$USERCODE""$SCLEAR/" | sed "s/ls00338/$SYELLOW""ls00338""$SCLEAR/" | sed "s/rg00700/$SYELLOW""rg00700""$SCLEAR/" | sed "s/cv00220/$SYELLOW""cv00220""$SCLEAR/" | sed "s/chemistry_30/$SCYAN""chemistry_30""$SCLEAR/" | sed "s/op/$SGREEN""op""$SCLEAR/" | sed "s/(null)/      /; s/(null)/      /")
+  RAW_QUEUE=$(squeue -S "f,e" -o "%u %F %e %D %C %P %N %f %v" -t R | tail -n+2)
 
-  echo -e "$QUEUE" | head -n50
+  if [ $SHOW_PREV_NUM -eq 10 ] ; then
+    SHOW_PREV_NUM=50
+  fi
 
-  # echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+  QUEUE=$(echo -e "$RAW_QUEUE" | head -n$SHOW_PREV_NUM)
+
+  IFS=$'\n'
+  read -ra QUEUE_ARR -d '' <<< "$QUEUE"
+
+  QUEUE="$RAW_HEADER"
+
+  for LINE in "${QUEUE_ARR[@]}"; do
+
+    IFS=" "
+    read -ra SPLIT_LINE <<< "$LINE"
+
+    QUEUE=$QUEUE"$colBold$(replace_usercodes ${SPLIT_LINE[0]})$colClear|"
+    QUEUE=$QUEUE"$colBold${SPLIT_LINE[1]}$colClear|"
+    
+    REMAINING=$(( $(date +%s -d "${SPLIT_LINE[2]}") - $( date +%s ) ))
+    REMAINING=$(show_time $REMAINING)
+
+    QUEUE=$QUEUE"$colResult$REMAINING$colClear|"
+
+    QUEUE=$QUEUE"$colVarType${SPLIT_LINE[3]}$colClear|"
+    QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}$colClear|"
+    QUEUE=$QUEUE"($colArg${SPLIT_LINE[5]}$colClear:"
+    QUEUE=$QUEUE"$colArg${SPLIT_LINE[6]}$colClear)|"
+
+    if [[ "${SPLIT_LINE[7]}" != *"(null)"* ]] ; then
+      QUEUE=$QUEUE"$colVarName${SPLIT_LINE[7]}$colClear|"
+    else
+      QUEUE=$QUEUE"|"
+    fi
+
+    if [[ "${SPLIT_LINE[8]}" != *"(null)"* ]] ; then
+      QUEUE=$QUEUE"$colVarName${SPLIT_LINE[8]}$colClear|"
+    else
+      QUEUE=$QUEUE"|"
+    fi
+    
+    QUEUE=$QUEUE"\n"
+
+  done
+
+  echo -ne "$QUEUE" | table.sh -s "|"
+
 }
 
 function cluster_info {
