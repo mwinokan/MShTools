@@ -2,6 +2,8 @@
 
 # To-Do's
 #  - Show node category in running queue
+#  - Short output for running, show_queue
+#  - Pretty output for pending queue
 
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
@@ -234,100 +236,123 @@ function show_queue {
   if [ $nRUNNING -eq 0 ] ; then
     echo -e $colSuccess"\nNo jobs running."$colClear
   else
-    echo -e $colSuccess"\nRunning: $nRUNNING"$colClear
-    if [ $HEADERS -eq 1 ] ; then
-      if [ $SHORT -eq 0 ] ; then
-        echo -e "\n""$HDR_JOBID_NAME_NODES""$HDR_ELAPSED""        ""$HDR_LIMIT""$HDR_PART_NODES"
-      else
-        echo -e "\n""$HDR_JOBID_NAME_NODES""$HDR_ELAPSED"
-      fi
-    fi
-    JOBIDS=$(echo -e "$QUEUE" |  grep "RUNNING" | awk '{print $1}')
-    for JOB in $JOBIDS; do
-      PARTITION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $2}')
-      NAME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $3}')
-      NAME="'"$colVarName$NAME$colClear"'""${NAME_LINE:${#NAME}}"
+
+    echo -e $colSuccess"\nRunning: $nRUNNING"$colClear"\n"
+
+    RAW_HEADER="$colUnderline$colBold""User$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"End Time$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Features$colClear\n"
+
+    RAW_QUEUE=$(squeue -S "f,e" -o "%F %j %M %D %C %P %N %f %v" -t R -u $USERCODE | tail -n+2)
+
+    QUEUE=$(echo -e "$RAW_QUEUE")
+
+    IFS=$'\n'
+    read -ra QUEUE_ARR -d '' <<< "$QUEUE"
+
+    QUEUE="$RAW_HEADER"
+
+    for LINE in "${QUEUE_ARR[@]}"; do
+
+      IFS=" "
+      read -ra SPLIT_LINE <<< "$LINE"
+
+      QUEUE=$QUEUE"$colBold${SPLIT_LINE[0]}$colClear|"
+      QUEUE=$QUEUE"$colVarName${SPLIT_LINE[1]}$colClear|"
       
-      TIME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $6}')
-      LIMIT=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $7}')
+      REMAINING=$(convert4showtime ${SPLIT_LINE[2]})
+      QUEUE=$QUEUE"$colResult$REMAINING$colClear|"
+      
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[3]}$colClear "
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}c$colClear|"
 
-      TIME=$(convert4showtime $TIME)
-      LIMIT=$(convert4showtime $LIMIT)
+      QUEUE=$QUEUE"($colArg${SPLIT_LINE[5]}$colClear:"
+      QUEUE=$QUEUE"$colArg${SPLIT_LINE[6]}$colClear)"
 
-      TIME=$TIME${TIME_LINE:${#TIME}}
-
-      LIMIT="("$LIMIT")"${LIMIT_LINE:${#LIMIT}}
-
-      TIME_STRING="$colResult$TIME$colClear $colResult$LIMIT$colClear"
-
-      NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $8}')
-      NODELIST=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $9}')
-
-
-      if [ $SHORT -eq 1 ] ; then
-        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$TIME"$colClear
+      if [[ "${SPLIT_LINE[7]}" != *"(null)"* ]] ; then
+        QUEUE=$QUEUE"|$colVarName${SPLIT_LINE[7]}$colClear "
       else
-        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear""$TIME_STRING"" ""($colArg$PARTITION$colClear:$colArg$NODELIST$colClear)"
+        QUEUE=$QUEUE"|"
       fi
 
-      RESERVATION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $10}')
-      if [[ $RESERVATION = "chemistry_30" ]] ; then
-        echo -e $colBold$cCYAN" chem_30"$colClear
-      else  
-        echo -e ""
+      if [[ "${SPLIT_LINE[8]}" != *"(null)"* ]] ; then
+        QUEUE=$QUEUE"$colVarName${SPLIT_LINE[8]}$colClear"
+      else
+        QUEUE=$QUEUE""
       fi
-      # echo $RESERVATION
+      
+      QUEUE=$QUEUE"\n"
+
     done
+
+    echo -ne "$QUEUE" | table.sh -s "|"
+
   fi
 
   #pending job summary
   if [ $nPENDING -eq 0 ] ; then
     echo -e $colError"\nNo jobs pending."$colClear
   else
-    echo -e $colError"\nPending: $nPENDING"$colClear
-    if [ $HEADERS -eq 1 ] ; then
-      if [ $SHORT -eq 0 ] ; then
-        echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Approx. Start$colClear  ""$HDR_PART"
-      else
-        echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Approx. Start$colClear"
-      fi
-    fi
 
-    # QUEUE=$(squeue --start -u $USERCODE)
-    QUEUE=$(squeue --start --format="%.18i %.9P %.22j %.8u %.2t %.19S %.6D %20Y %R %v" -u $USERCODE)
-    # echo $QUEUE
-    JOBIDS=$(echo -e "$QUEUE" | grep "PD" | awk '{print $1}')
-    for JOB in $JOBIDS; do
-      PARTITION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $2}')
-      NAME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $3}')
-      NAME="'"$colVarName$NAME$colClear"'""${NAME_LINE:${#NAME}}"
-      START_TIME=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $6}')
-      NODES=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $7}')
+    echo -e $colError"\nPending: $nPENDING"$colClear"\n"
 
-      if [[ "$START_TIME" != *"N/A"* ]] ; then
-        REMAINING=$(( $(date +%s -d "$START_TIME") - $( date +%s ) ))
+    RAW_HEADER="$colUnderline$colBold""User$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Approx. Start$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear"$colClear$colUnderline)"$colClear"|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Features$colClear\n"
+
+    RAW_QUEUE=$(squeue -S "f,e" -o "%F %j %S %D %C %P %f %v" -t PENDING -u $USERCODE | tail -n+2)
+
+    QUEUE=$(echo -e "$RAW_QUEUE")
+
+    IFS=$'\n'
+    read -ra QUEUE_ARR -d '' <<< "$QUEUE"
+
+    QUEUE="$RAW_HEADER"
+
+    for LINE in "${QUEUE_ARR[@]}"; do
+
+      IFS=" "
+      read -ra SPLIT_LINE <<< "$LINE"
+
+      QUEUE=$QUEUE"$colBold${SPLIT_LINE[0]}$colClear|"
+      QUEUE=$QUEUE"$colVarName${SPLIT_LINE[1]}$colClear|"
+
+      REMAINING=${SPLIT_LINE[2]}
+      if [[ "$REMAINING" != *"N/A"* ]] ; then
+        REMAINING=$(( $(date +%s -d "$REMAINING") - $( date +%s ) ))
         REMAINING=$(show_time $REMAINING | xargs)
-        REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
-      else
-        # REMAINING="N/A"${TIME_LINE:3}
-        REMAINING="N/A"
-        REMAINING=$REMAINING${TIME_LINE:${#REMAINING}}
       fi
-      if [ $SHORT -eq 1 ] ; then
-        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear
+      QUEUE=$QUEUE"$colResult$REMAINING$colClear|"
+      
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[3]}$colClear "
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}c$colClear|"
+
+      QUEUE=$QUEUE"($colArg${SPLIT_LINE[5]}$colClear)"
+
+      if [[ "${SPLIT_LINE[6]}" != *"(null)"* ]] ; then
+        QUEUE=$QUEUE"|$colVarName${SPLIT_LINE[6]}$colClear "
       else
-        echo -ne $colBold$JOB$colClear "$NAME"" $colVarType$NODES nodes $colClear"$colResult"$REMAINING"$colClear "($colArg$PARTITION$colClear)"
+        QUEUE=$QUEUE"|"
       fi
 
-      RESERVATION=$(echo -e "$QUEUE" |  grep $JOB | awk '{print $10}')
-      if [[ $RESERVATION != "(null)" ]] ; then
-        echo -e $colBold$cCYAN" *"$colClear
-      else  
-        echo -e ""
+      if [[ "${SPLIT_LINE[7]}" != *"(null)"* ]] ; then
+        QUEUE=$QUEUE"$colVarName${SPLIT_LINE[7]}$colClear"
+      else
+        QUEUE=$QUEUE""
       fi
-      # echo $RESERVATION
+      
+      QUEUE=$QUEUE"\n"
 
     done
+
+    echo -ne "$QUEUE" | table.sh -s "|"
+
   fi
 }
 
@@ -335,23 +360,37 @@ function prev_queue {
 
   # Previous jobs  
   if [ $SHOW_PREV_NUM -gt 0 ] ; then
-    echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs:"$colClear
-    
-    LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
-    # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-    sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       "| tail -n $SHOW_PREV_NUM > __temp__
 
-    if [ $SHORT -eq 0 ] ; then
-      echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
+    RAW_HEADER=$colUnderline$colBold"JobID$colClear|"
+    RAW_HEADER=$RAW_HEADER"'"$colUnderline$colVarName"Job Name$colClear'|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Start Time$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Run Time$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colBold"Status$colClear\n"
+
+    if [[ $HISTORY != "0" ]] ; then
+      LAST_WEEK_DATE=$(date --date="$HISTORY ago" +"%Y-%m-%d")
+      echo -e $colBold$colFile"\nJobs since $LAST_WEEK_DATE ($HISTORY ago):"$colClear
+      sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%30,partition,state,start,elapsed,time,nnodes,ncpus,nodelist%22 | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " > __temp__
     else
-      echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear"
+      echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs (last fortnight):"$colClear
+      LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
+      sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%30,partition,state,start,elapsed,time,nnodes,ncpus,nodelist%22 | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       "| tail -n $SHOW_PREV_NUM > __temp__
     fi
 
+    QUEUE="\n$RAW_HEADER"
+
     while read -r LINE; do
-      JOB_ID=$(echo $LINE | awk '{print $1}')
-      JOB_NAME=$(echo $LINE | awk '{print $2}')
-      PARTITION=$(echo $LINE | awk '{print $3}')
-      STATUS=$(echo $LINE | awk '{print $4}')
+
+      IFS=" "
+      read -ra SPLIT_LINE <<< "$LINE"
+
+      JOB_ID=${SPLIT_LINE[0]}
+      JOB_NAME=${SPLIT_LINE[1]}
+      PARTITION=${SPLIT_LINE[2]}
+      STATUS=${SPLIT_LINE[3]}
+
       if [[ $JOB_NAME == "bash" ]] ; then
         if [[ $STATUS != "CANCELLED+" ]] ; then
           STATUS="TERMINATED"
@@ -367,11 +406,13 @@ function prev_queue {
           STATUS="TERMINATED"
         fi
       fi
-      START=$(echo $LINE | awk '{print $5}')
-      ELAPSED=$(echo $LINE | awk '{print $6}')
-      MAX_TIME=$(echo $LINE | awk '{print $7}')
-      NUM_NODES=$(echo $LINE | awk '{print $8}')
-      NODES=$(echo $LINE | awk '{print $9}')
+
+      START=${SPLIT_LINE[4]}
+      ELAPSED=${SPLIT_LINE[5]}
+      MAX_TIME=${SPLIT_LINE[6]}
+      NUM_NODES=${SPLIT_LINE[7]}
+      NUM_CPUS=${SPLIT_LINE[8]}
+      NODES=${SPLIT_LINE[9]}
 
       if [[ $STATUS == "COMPLETED" ]] ; then
         ELAPSED_COLOR=$colSuccess
@@ -390,115 +431,38 @@ function prev_queue {
 
       START=$(date --date="$START" "+%b %-d`DaySuffix $START` %R")
 
-      START_LINE="              "
-      START=$START${START_LINE:${#START}}
-
-      JOB_NAME="'"$colVarName$JOB_NAME$colClear"'""${NAME_LINE:${#JOB_NAME}}"
       ELAPSED=$(convert4showtime $ELAPSED)
       STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
-
-      PARTITION_LINE="                        "
-      PARTITION_STR="("$colArg$PARTITION$colClear":"$colArg$NODES$colClear")"
-      PARTITION_TEMPSTR="("$PARTITION":"$NODES")"
-      PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_TEMPSTR}}
-
-      if [ $SHORT -eq 0 ] ; then
-        if [[ $ELAPSED == "" ]] ; then
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" pre-start"$colClear
-        else
-          echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS", "$ELAPSED_COLOR$ELAPSED$colClear
-        fi
-      else
-        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
+      
+      if [[ $ELAPSED == "" ]] ; then
+          ELAPSED=""
       fi
+
+      QUEUE=$QUEUE$colBold$JOB_ID$colClear"|"
+      QUEUE=$QUEUE"'"$colVarName$JOB_NAME$colClear"'|"
+      QUEUE=$QUEUE$colVarType$NUM_NODES" "
+      QUEUE=$QUEUE$NUM_CPUS"c"$colClear"|"
+      QUEUE=$QUEUE$colResult$START$colClear"|"
+      QUEUE=$QUEUE$colResult$ELAPSED$colClear"|"
+
+      if [[ $NODES == "None" ]] ; then
+          QUEUE=$QUEUE"("$colArg$PARTITION$colClear
+          NODES=""
+      else
+          QUEUE=$QUEUE"("$colArg$PARTITION$colClear":"
+      fi
+
+      QUEUE=$QUEUE$colArg$NODES$colClear")""|"
+      QUEUE=$QUEUE$ELAPSED_COLOR$STATUS$colClear"|"
+      QUEUE=$QUEUE"\n"
+
     done < __temp__
+
+    echo -ne "$QUEUE" | table.sh -s "|"
+
   fi
 
   rm __temp__* 2> /dev/null
-}
-
-function hist_queue {
-  header_strings
-
-  # Previous jobs  
-  LAST_WEEK_DATE=$(date --date="$HISTORY ago" +"%Y-%m-%d")
-  
-  echo -e $colBold$colFile"\nJobs since $LAST_WEEK_DATE:"$colClear
-  # sacct --starttime $LAST_WEEK_DATE --format=JobID,Jobname,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED" | grep -v "batch" | tail -n $SHOW_PREV_NUM
-  sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%22,partition,state,start,elapsed,time,nnodes,nodelist | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " > __temp__
-
-  if [ $SHORT -eq 0 ] ; then
-    echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear  ""$HDR_PART_NODES"
-  else
-    echo -e "\n""$HDR_JOBID_NAME_NODES"$colResult$colUnderline"Job Start Time$colClear"
-  fi
-
-  while read -r LINE; do
-    JOB_ID=$(echo $LINE | awk '{print $1}')
-    JOB_NAME=$(echo $LINE | awk '{print $2}')
-    PARTITION=$(echo $LINE | awk '{print $3}')
-    STATUS=$(echo $LINE | awk '{print $4}')
-    if [[ $JOB_NAME == "bash" ]] ; then
-      if [[ $STATUS != "CANCELLED+" ]] ; then
-        STATUS="TERMINATED"
-      fi
-    fi
-    if [[ $JOB_NAME == "*.sh" ]] ; then
-      if [[ $STATUS != "CANCELLED+" ]] ; then
-        STATUS="TERMINATED"
-      fi
-    fi
-    if [[ $JOB_NAME == "sh" ]] ; then
-      if [[ $STATUS != "CANCELLED+" ]] ; then
-        STATUS="TERMINATED"
-      fi
-    fi
-    START=$(echo $LINE | awk '{print $5}')
-    ELAPSED=$(echo $LINE | awk '{print $6}')
-    MAX_TIME=$(echo $LINE | awk '{print $7}')
-    NUM_NODES=$(echo $LINE | awk '{print $8}')
-    NODES=$(echo $LINE | awk '{print $9}')
-
-    if [[ $STATUS == "COMPLETED" ]] ; then
-      ELAPSED_COLOR=$colSuccess
-    elif [[ $STATUS == "CANCELLED+" ]] ; then
-      ELAPSED_COLOR=$colWarning
-      STATUS="CANCELLED"
-    elif [[ $STATUS == "CANCELLED" ]] ; then
-      ELAPSED_COLOR=$colWarning
-    elif [[ $STATUS == "FAILED" ]] ; then
-      ELAPSED_COLOR=$colError
-    elif [[ $STATUS == "TIMEOUT" ]] ; then
-      ELAPSED_COLOR=$colError
-    else
-      ELAPSED_COLOR=$colResult
-    fi
-
-    START=$(date --date="$START" "+%b %-d`DaySuffix $START` %R")
-
-    START_LINE="              "
-    START=$START${START_LINE:${#START}}
-
-    JOB_NAME="'"$colVarName$JOB_NAME$colClear"'""${NAME_LINE:${#JOB_NAME}}"
-    ELAPSED=$(convert4showtime $ELAPSED)
-    STATUS=$(echo $STATUS | tr [:upper:] [:lower:] | sed -E "s/[[:alnum:]_'-]+/\u&/g")
-
-    PARTITION_LINE="                                                            "
-    PARTITION_STR="("$colArg$PARTITION$colClear":"$colArg$NODES$colClear")"
-    PARTITION_STR=$PARTITION_STR${PARTITION_LINE:${#PARTITION_STR}}
-
-    if [ $SHORT -eq 0 ] ; then
-      if [[ $ELAPSED == "" ]] ; then
-        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS" pre-start"$colClear
-      else
-        echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear" "$PARTITION_STR" "$ELAPSED_COLOR$STATUS", "$ELAPSED_COLOR$ELAPSED$colClear
-      fi
-    else
-      echo -e $colBold$JOB_ID$colClear" ""$JOB_NAME"" "$colVarType$NUM_NODES" nodes"$colClear $colResult"$START" $colClear
-    fi
-  done < __temp__
-
-  # rm __temp__* 2> /dev/null
 }
 
 function pend_queue {
@@ -873,7 +837,8 @@ elif [ "$HISTORY" != "0" ] ; then
     HISTORY="6 months"
   fi
 
-  hist_queue
+  # hist_queue
+  prev_queue
 
 elif [ $PENDING -eq 1 ] ; then
 
