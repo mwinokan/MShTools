@@ -241,12 +241,12 @@ function show_queue {
 
     RAW_HEADER="$colUnderline$colBold""User$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
-    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"End Time$colClear|"
+    RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Run Time (Limit)$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Features$colClear\n"
 
-    RAW_QUEUE=$(squeue -S "f,e" -o "%F %j %M %D %C %P %N %f %v" -t R -u $USERCODE | tail -n+2)
+    RAW_QUEUE=$(squeue -S "f,e" -o "%F %j %M %l %D %C %P %N %f %v" -t R -u $USERCODE | tail -n+2)
 
     QUEUE=$(echo -e "$RAW_QUEUE")
 
@@ -264,22 +264,25 @@ function show_queue {
       QUEUE=$QUEUE"$colVarName${SPLIT_LINE[1]}$colClear|"
       
       REMAINING=$(convert4showtime ${SPLIT_LINE[2]})
-      QUEUE=$QUEUE"$colResult$REMAINING$colClear|"
-      
-      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[3]}$colClear "
-      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}c$colClear|"
+      QUEUE=$QUEUE"$colResult$REMAINING$colClear"
 
-      QUEUE=$QUEUE"($colArg${SPLIT_LINE[5]}$colClear:"
-      QUEUE=$QUEUE"$colArg${SPLIT_LINE[6]}$colClear)"
+      LIMIT=$(convert4showtime ${SPLIT_LINE[3]})
+      QUEUE=$QUEUE"$colResult ($LIMIT)$colClear|"
+      
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}$colClear "
+      QUEUE=$QUEUE"$colVarType${SPLIT_LINE[5]}c$colClear|"
+
+      QUEUE=$QUEUE"($colArg${SPLIT_LINE[6]}$colClear:"
+      QUEUE=$QUEUE"$colArg${SPLIT_LINE[7]}$colClear)"
 
       if [[ "${SPLIT_LINE[7]}" != *"(null)"* ]] ; then
-        QUEUE=$QUEUE"|$colVarName${SPLIT_LINE[7]}$colClear "
+        QUEUE=$QUEUE"|$colVarName${SPLIT_LINE[8]}$colClear "
       else
         QUEUE=$QUEUE"|"
       fi
 
       if [[ "${SPLIT_LINE[8]}" != *"(null)"* ]] ; then
-        QUEUE=$QUEUE"$colVarName${SPLIT_LINE[8]}$colClear"
+        QUEUE=$QUEUE"$colVarName${SPLIT_LINE[9]}$colClear"
       else
         QUEUE=$QUEUE""
       fi
