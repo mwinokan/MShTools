@@ -7,6 +7,13 @@
 REPLACE_DFT=0
 DFT_TEMPLATE="dft.nw"
 
+NPROC_NWC=28
+EXLINE=""
+EXEXLINE=""
+PRETASK=""
+
+KILL=0
+
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
@@ -32,6 +39,9 @@ while test $# -gt 0; do
 			echo
 			echo -e $colArg" -xnwe <COMMAND>"$colClear
 			echo -e "Prepend command to nwchem executable wrapper"
+			echo
+			echo -e $colArg" -xptl <LINE>"$colClear
+			echo -e "Add line to nwchem input file (before task)"
 			exit 1
 			;;
 		-np)
@@ -58,6 +68,11 @@ while test $# -gt 0; do
 			EXEXLINE="$EXEXLINE""$1\n"
 			shift
 			;;
+		-pt|--pre-task)
+			shift
+			PRETASK=$1
+			shift
+			;;
 		-nonwc|--no-nwchem)
 			shift 
 			export AMBERHOME=/home/e89/e89/maxwin/tars_n_zips/amber20_src
@@ -71,10 +86,6 @@ while test $# -gt 0; do
 			;;
 	esac
 done
-
-# echo $NPROC_NWC
-# echo $REPLACE_DFT
-# echo $DFT_TEMPLATE
 
 ##########
 
@@ -155,20 +166,34 @@ NWC_EXEC="$NWCHEM_L64/nwchem"
 # Use custom DFT block
 PRERUN=""
 if [ ! -z "$EXEXLINE" ] ; then
-	# headerOut $EXEXLINE
 	PRERUN="$EXEXLINE"
 fi
 if [ $REPLACE_DFT -eq 1 ] ; then
 	varOut "DFT_TEMPLATE" $DFT_TEMPLATE
 
-	# SED_IN='/dft$/,/end$/c\'$(cat $DFT_TEMPLATE)
-	# echo "$SED_IN" 
-	# PRERUN="$PRERUN""sed -i "$SED_IN" nwchem.nw"
+	# replace the start of the DFT block with a string to match to
 	PRERUN="$PRERUN""sed -i 's/dft$/SED_TARGET/' nwchem.nw$ENDLINE"
+
+	# remove any end statements in dft.nw
 	PRERUN="$PRERUN""sed -i 's/end$//' dft.nw$ENDLINE"
+
+	# replace the contents of the dft block in the nwchem file
 	SED_IN="'/SED_TARGET$/ {p; r $DFT_TEMPLATE'"
 	PRERUN="$PRERUN""sed -i -ne $SED_IN -e ':a; n; /end$/ {p; b}; ba}; p' nwchem.nw$ENDLINE"
+
+	# restore the start of the DFT block
 	PRERUN="$PRERUN""sed -i 's/SED_TARGET/dft/' nwchem.nw$ENDLINE"
+fi
+if [[ "$PRETASK" != "" ]] ; then
+
+	# remove the task line
+	PRERUN="$PRERUN""sed -i 's/task dft gradient$//' nwchem.nw$ENDLINE"
+	
+	# append the lines from the template
+	PRERUN="$PRERUN""cat $PRETASK >> nwchem.nw$ENDLINE"
+
+	# reappend the task line
+	PRERUN="$PRERUN""echo 'task dft gradient' >> nwchem.nw$ENDLINE"
 fi
 
 # Extra input commands
