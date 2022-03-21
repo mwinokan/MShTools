@@ -78,7 +78,7 @@ while test $# -gt 0; do
 			export AMBERHOME=/home/e89/e89/maxwin/tars_n_zips/amber20_src
 			module load cray-python
 			source $AMBERHOME/amber.sh
-			exit 0
+			return 0
 			;;
 		*)
 			warningOut "Unrecognised CLI flag: $colArg$1"
@@ -152,9 +152,10 @@ ln -s /work/y07/shared/nwchem/nwchem-7.0.2/bin/LINUX64/depend.x depend.x
 
 export PATH=$(pwd):$PATH
 
-export NWCHEM=/work/y07/shared/nwchem/nwchem-7.0.2
-export NWCHEM_BASIS_LIBRARY=/work/y07/shared/nwchem/nwchem-7.0.2/libraries/
-export NWCHEM_NWPW_LIBRARY=/work/y07/shared/nwchem/nwchem-7.0.2/libraryps/
+export NWCHEM=/work/y07/shared/apps/core/nwchem/7.0.2
+export NWCHEM_L64=$NWCHEM/bin/LINUX64
+export NWCHEM_BASIS_LIBRARY=$NWCHEM/libraries/
+export NWCHEM_NWPW_LIBRARY=$NWCHEM/libraryps/
 
 ################################################################################
 
@@ -216,7 +217,8 @@ echo -e "$SHEBANG$ENDLINE$PRERUN$RUNCMD$NWC_EXEC "'$@'"$ENDLINE""exit "'$?'" $EN
 # Make the binary executable
 chmod 755 nwchem
 
-which nwchem
+headerOut "All nwchem in path:"
+which -a nwchem
 
 # User output
 echo -e "$colFunc""AmberTools/NWChem/MPI$colClear: $colSuccess""ready to use.$colClear"
