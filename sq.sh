@@ -373,7 +373,9 @@ function prev_queue {
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Start Time$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Run Time$colClear|"
-    RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    if [ $SHORT -eq 0 ] ; then
+      RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    fi
     RAW_HEADER=$RAW_HEADER$colUnderline$colBold"Status$colClear\n"
 
     if [[ $HISTORY != "0" ]] ; then
@@ -452,14 +454,16 @@ function prev_queue {
       QUEUE=$QUEUE$colResult$START$colClear"|"
       QUEUE=$QUEUE$colResult$ELAPSED$colClear"|"
 
-      if [[ $NODES == "None" ]] ; then
-          QUEUE=$QUEUE"("$colArg$PARTITION$colClear
-          NODES=""
-      else
-          QUEUE=$QUEUE"("$colArg$PARTITION$colClear":"
+      if [ $SHORT -eq 0 ] ; then
+        if [[ $NODES == "None" ]] ; then
+            QUEUE=$QUEUE"("$colArg$PARTITION$colClear
+            NODES=""
+        else
+            QUEUE=$QUEUE"("$colArg$PARTITION$colClear":"
+        fi
+        QUEUE=$QUEUE$colArg$NODES$colClear")""|"
       fi
 
-      QUEUE=$QUEUE$colArg$NODES$colClear")""|"
       QUEUE=$QUEUE$ELAPSED_COLOR$STATUS$colClear"|"
       QUEUE=$QUEUE"\n"
 
