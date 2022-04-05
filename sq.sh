@@ -86,6 +86,7 @@ while test $# -gt 0; do
     -charlotte)
       shift
       USERCODE=tv00180
+      ;;
     -s)
       shift
       SHORT=1
