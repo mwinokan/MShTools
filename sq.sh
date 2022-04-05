@@ -73,6 +73,14 @@ while test $# -gt 0; do
       shift
       USERCODE=gf00304
       ;;
+    -harry)
+      shift
+      USERCODE=hw00892
+      ;;
+    -ben)
+      shift
+      USERCODE=bk00346
+      ;;
     -s)
       shift
       SHORT=1
