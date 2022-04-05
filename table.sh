@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 # @description:    Perl version of column2 which works with color codes and is way faster than the bash version
 # @author:         Luca Salvarani
