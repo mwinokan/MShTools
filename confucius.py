@@ -15,6 +15,7 @@ quotes = [
 			"BETTER TO ASK FOR FORGIVENESS THAN PERMISSION",
 			"DO YOU THINK I WANT TO BE HERE?",
 			"READ THE FUCKING MANUAL",
+			"NEVER GIVE A COW\nFREE MILK",
 		]
 
 quote = sample(quotes,1)
@@ -23,14 +24,13 @@ buff = 10
 
 maxline=0
 
-print('"'.rjust(buff+1),end='')
+print("\n"+'"'.rjust(buff+1),end='')
 for i,line in enumerate(quote[0].split("\n")):
 	if i > 0:
 		print("\n"+" ".rjust(buff+1),end='')
 	print(f'{line}',end='')
 	if len(line) > maxline:
 		maxline = len(line)
-print('"',end='\n')
+print('"')
 
-print("-CONFUCIUS".rjust(maxline+2+buff))
-print('',end='\n')
+print("\033[3m"+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
