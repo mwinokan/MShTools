@@ -17,6 +17,7 @@ SEARCH=0
 UPDATE=0
 PULL=0
 NO_WD=0
+QUIET=0
 
 # Parse arguments:
 while test $# -gt 0; do
@@ -56,6 +57,10 @@ while test $# -gt 0; do
       shift
       NO_WD=1
       ;;
+    -q|--quiet)
+      shift
+      QUIET=1
+      ;;
     -n|--name)
       SEARCH=1
       shift
@@ -92,9 +97,7 @@ if [ ! -e $MWSHPATH/.all_gits ] ; then
   # Find all the .git folders in home directory:
   echo "Searching for repositories in \$HOME..."
   find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
-fi
-
-if [ $UPDATE -eq 1 ] ; then
+elif [ $UPDATE -eq 1 ] ; then
   # Find all the .git folders in home directory:
   echo "Searching for repositories in \$HOME..."
   find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
@@ -129,42 +132,30 @@ while IFS= read -r GIT; do
 
     if [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -gt 0 ] ; then
       ## my repo
-
-      # echo -e $colBold"X"$GH_USER"X"$colClear
-      # sublime $GIT/config
-      
-      # REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*(?=.git)")
-      # REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*")
       URL=$(cat "$GIT/config" | $MYGREP -oP "(?<=url\ \=\ ).*")
       REPO_NAME=$(basename $URL .git)
 
       REPO_TYPE=1
     else
       ## not my repo
-      
       REPO_TYPE=0
       continue
     fi
 
   elif [ $(cat "$GIT/config" | grep "gitlab" | wc -l) -gt 0 ] ; then
     ## gitlab repo
-
     if [ $SHOW_SURREY -eq 0 ] ; then continue ; fi
 
-    # sublime $GIT/config
     if [ $(cat "$GIT/config" | grep $GL_STAFFNAME | wc -l) -gt 0 ] ; then
       ## my repo
-
       REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GL_USERCODE/).*(?=.git)")
       REPO_TYPE=2
     elif [ $(cat "$GIT/config" | grep $GH_USER | wc -l) -gt 0 ] ; then
       ## my repo
-
       REPO_NAME=$(cat "$GIT/config" | $MYGREP -oP "(?<=$GH_USER/).*(?=.git)")
       REPO_TYPE=2
     else
       ## not my repo
-
       REPO_TYPE=0
       continue
     fi
@@ -180,19 +171,37 @@ while IFS= read -r GIT; do
   cd "$GIT"/.. # go to repo root directory
 
   if [ $PULL -eq 1 ] ; then
-    git pull > __temp__PULL 2>&1
-    # cat __temp__PULL
-    if [ $(grep "Already" __temp__PULL | grep "up" | grep "to" | grep "date" | wc -l) -gt 0 ] ; then
-      PULL_STAT=0
-      echo -n -e "     "
-    elif [ $(grep "error" __temp__PULL | wc -l) -gt 0 ] ; then
-      PULL_STAT=-1
-      echo -n -e "$colError""Pull $colClear"
-    elif [ $(grep "Fast-forward" __temp__PULL | wc -l) -gt 0 ] ; then
-      PULL_STAT=1
-      echo -n -e "$colSuccess""Pull $colClear"
+    if [ $QUIET -ne 1 ] ; then
+      git pull > __temp__PULL 2>&1
+      # cat __temp__PULL
+      if [ $(grep "Already" __temp__PULL | grep "up" | grep "to" | grep "date" | wc -l) -gt 0 ] ; then
+        PULL_STAT=0
+        echo -n -e "     "
+      elif [ $(grep "error" __temp__PULL | wc -l) -gt 0 ] ; then
+        PULL_STAT=-1
+        echo -n -e "$colError""Pull $colClear"
+      elif [ $(grep "Fast-forward" __temp__PULL | wc -l) -gt 0 ] ; then
+        PULL_STAT=1
+        echo -n -e "$colSuccess""Pull $colClear"
+      fi
+      rm __temp__PULL
+    else
+      git pull > __temp__PULL 2>&1
+      # cat __temp__PULL
+      if [ $(grep "Already" __temp__PULL | grep "up" | grep "to" | grep "date" | wc -l) -gt 0 ] ; then
+        PULL_STAT=0
+        continue
+      elif [ $(grep "error" __temp__PULL | wc -l) -gt 0 ] ; then
+        PULL_STAT=-1
+        echo -e "$colError""Update failed for $colFunc$REPO_NAME$colClear"
+        continue
+      elif [ $(grep "Fast-forward" __temp__PULL | wc -l) -gt 0 ] ; then
+        PULL_STAT=1
+        echo -e "$colSuccess""Updated $colFunc$REPO_NAME$colClear"
+        continue
+      fi
+      rm __temp__PULL
     fi
-    rm __temp__PULL
   fi
 
   # get the git status output:
