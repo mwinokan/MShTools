@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # To-Do's
+#  - Archer2 support for -i
 #  - Show node category in running queue
-#  - Short output for running, show_queue
 #  - Pretty output for pending queue
 
 source $MWSHPATH/colours.sh
@@ -18,14 +18,20 @@ IDLE=0
 HISTORY=0
 JOB=0
 
-if [[ $(hostname) == *scarf* ]] ; then
+ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
+if [[ $ALTHOST == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
-elif [[ $(hostname) == uan01 ]] ; then
+elif [[ $ALTHOST == uan01 ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
-elif [[ $(hostname) == ln0* ]] ; then
+elif [[ $ALTHOST == ln0* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
-else
+elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
   USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+else
+  errorOut "Unrecognised cluster"
+  exit 1
 fi
 
 SHOW_PREV_NUM=10
@@ -500,13 +506,24 @@ function pend_queue {
 
 function idle_queue {
   HEADER=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | head -n1)
-  OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
-  DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
-  V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
-  CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
-  OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2" | grep -v "node43\|node44\|node55\|node56")
-
-  echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+  if [[ $ALTHOST == *eureka2* ]] ; then
+    # eureka2
+    DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
+    RES_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved)
+    OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v debug | grep -v reserved)
+    echo -e "$(echo -e "$HEADER$cCYAN\n$RES_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+  elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
+    # eureka
+    OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
+    DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
+    V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
+    CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
+    OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2" | grep -v "node43\|node44\|node55\|node56")
+    echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
+  else
+    ALLIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep "idle\|reserved")
+    echo -e "$(echo -e "$HEADER\n$ALLIDLES$colClear" | column -t)"
+  fi
 }
 
 function replace_usercodes {
