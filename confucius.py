@@ -16,21 +16,18 @@ quotes = [
 			"DO YOU THINK I WANT TO BE HERE?",
 			"READ THE FUCKING MANUAL",
 			"NEVER GIVE A COW\nFREE MILK",
+			"FOR BETTER OR FOR WORSE\nI'LL ALWAYS HAVE ANOTHER COFFEE",
+			"I'M A BIG PROPONENT FOR HAVING FUN",
 		]
 
-quote = sample(quotes,1)
-
 buff = 10
-
 maxline=0
 
 print("\n"+'"'.rjust(buff+1),end='')
-for i,line in enumerate(quote[0].split("\n")):
+for i,line in enumerate(sample(quotes,1)[0].split("\n")):
 	if i > 0:
 		print("\n"+" ".rjust(buff+1),end='')
 	print(f'{line}',end='')
 	if len(line) > maxline:
 		maxline = len(line)
-print('"')
-
-print("\033[3m"+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
+print('"\n\033[3m'+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
