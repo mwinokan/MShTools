@@ -249,10 +249,14 @@ function show_queue {
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colResult"Run Time (Limit)$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarType"#N #C$colClear|"
-    RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    if [ $SHORT -eq 0 ] ; then
+      RAW_HEADER=$RAW_HEADER$colUnderline"("$colArg"Partition"$colClear$colUnderline":"$colArg"NodeList$colClear$colUnderline)"$colClear"|"
+    fi
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Features$colClear\n"
 
     RAW_QUEUE=$(squeue -S "f,e" -o "%F %j %M %l %D %C %P %N %f %v" -t R -u $USERCODE | tail -n+2)
+    # RAW_QUEUE=$(squeue -S "f,e" -O "JobID: Name: TimeUsed: TimeLimit: NumNodes: NumCPUs: Partition: Nodes: Feature: Reservation: NumTasks: cpus-per-task" -t R -u $USERCODE | tail -n+2)
+    # RAW_QUEUE=$(squeue -S "f,e" -O "JobID" -t R -u $USERCODE | tail -n+2)
 
     QUEUE=$(echo -e "$RAW_QUEUE")
 
@@ -274,20 +278,29 @@ function show_queue {
 
       LIMIT=$(convert4showtime ${SPLIT_LINE[3]})
       QUEUE=$QUEUE"$colResult ($LIMIT)$colClear|"
+
+      # TASKS=${SPLIT_LINE[10]}
+      # CPUS_PER_TASK=${SPLIT_LINE[11]}
+      # ACTUAL_CORES=$((TASKS * CPUS_PER_TASK))
+
+      # echo $TASKS $CPUS_PER_TASK $ACTUAL_CORES
       
       QUEUE=$QUEUE"$colVarType${SPLIT_LINE[4]}$colClear "
       QUEUE=$QUEUE"$colVarType${SPLIT_LINE[5]}c$colClear|"
+      # QUEUE=$QUEUE"$colVarType$ACTUAL_CORES""c$colClear|"
 
-      QUEUE=$QUEUE"($colArg${SPLIT_LINE[6]}$colClear:"
-      QUEUE=$QUEUE"$colArg${SPLIT_LINE[7]}$colClear)"
+      if [ $SHORT -eq 0 ] ; then
+        QUEUE=$QUEUE"($colArg${SPLIT_LINE[6]}$colClear:"
+        QUEUE=$QUEUE"$colArg${SPLIT_LINE[7]}$colClear)"
+      fi
 
-      if [[ "${SPLIT_LINE[7]}" != *"(null)"* ]] ; then
+      if [[ "${SPLIT_LINE[8]}" != *"(null)"* ]] ; then
         QUEUE=$QUEUE"|$colVarName${SPLIT_LINE[8]}$colClear "
       else
         QUEUE=$QUEUE"|"
       fi
 
-      if [[ "${SPLIT_LINE[8]}" != *"(null)"* ]] ; then
+      if [[ "${SPLIT_LINE[9]}" != *"(null)"* ]] ; then
         QUEUE=$QUEUE"$colVarName${SPLIT_LINE[9]}$colClear"
       else
         QUEUE=$QUEUE""
