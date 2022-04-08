@@ -12,6 +12,8 @@ EXLINE=""
 EXEXLINE=""
 PRETASK=""
 
+KILL=0
+
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
@@ -66,13 +68,14 @@ while test $# -gt 0; do
 			EXEXLINE="$EXEXLINE""$1\n"
 			shift
 			;;
-		-xptl|--extra-pre-task-line)
+		-pt|--pre-task)
 			shift
-			PRETASK="$PRETASK""$1\n"
+			PRETASK=$1
 			shift
 			;;
 		*)
 			warningOut "Unrecognised CLI flag: $colArg$1"
+			KILL=1
 			break
 			;;
 	esac
@@ -86,6 +89,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]] ; then
 	echo "Please source this script. i.e. :"
 	echo "source \$MWSHPATH/load_amb_nwc.sh <N_NWCHEM_THREADS>"
 	exit 1
+fi
+
+if [ $KILL -eq 1 ] ; then
+	return 2
 fi
 
 if [ -z $NPROC_NWC ] ; then
@@ -156,17 +163,9 @@ if [[ "$PRETASK" != "" ]] ; then
 
 	# remove the task line
 	PRERUN="$PRERUN""sed -i 's/task dft gradient$//' nwchem.nw$ENDLINE"
-
-	# add pretask lines
-	IFS='\n'
-	for LINE in $PRETASK; do
-		LINE=${LINE%$'\n'}
-		if [[ "$LINE" == "" ]] ; then continue; fi
-		echo ">>$LINE<<"
-		PRERUN="$PRERUN""echo '$LINE' >> nwchem.nw$ENDLINE"
-	done
 	
-	PRERUN="$PRERUN""echo >> nwchem.nw$ENDLINE"
+	# append the lines from the template
+	PRERUN="$PRERUN""cat $PRETASK >> nwchem.nw$ENDLINE"
 
 	# reappend the task line
 	PRERUN="$PRERUN""echo 'task dft gradient' >> nwchem.nw$ENDLINE"
