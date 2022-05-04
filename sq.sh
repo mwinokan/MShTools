@@ -530,7 +530,8 @@ function idle_queue {
     OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
     DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
     V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
-    CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
+    CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved)
+    # CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
     OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2" | grep -v "node43\|node44\|node55\|node56")
     echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
   else
@@ -681,8 +682,10 @@ function job_info {
     varOut "        #CPUs" "$NUM_CPUS" "" $colVarType
 
     RESERVATION=${INFO_ARR[8]}
-    if [ "$RESERVATION" != "" ] ; then
-      varOut "  Reservation" "$RESERVATION" "" $colArg
+    if [ "$RESERVATION" != "(null)" ] ; then
+      if [ "$RESERVATION" != "" ] ; then
+        varOut "  Reservation" "$RESERVATION" "" $colArg
+      fi
     fi
 
     TIME_LIMIT=${INFO_ARR[9]}
@@ -764,7 +767,9 @@ function job_info {
 
     RESERVATION=$(echo "$JOB_BUFFER" | grep -oP "(?<=Reservation=).*")
     if [ "$RESERVATION" != "(null)" ] ; then
-      varOut "Reservation" "$RESERVATION" "" $colArg
+      if [ "$RESERVATION" != "" ] ; then
+        varOut "Reservation" "$RESERVATION" "" $colArg
+      fi
     fi
 
     ### Timings
@@ -787,9 +792,11 @@ function job_info {
           REMAINING=$(show_time $REMAINING)
         fi
       else
-        REMAINING="N/A"
+        REMAINING=""
       fi
-      varOut "Approx Wait" "$REMAINING" "" $colResult
+      if [[ "$REMAINING" != "" ]] ; then
+        varOut "Approx Wait" "$REMAINING" "" $colResult
+      fi
 
       QUEUE=$(echo "$JOB_BUFFER" | grep -oP "(?<=SubmitTime=).*(?= Eligible)")
 
@@ -797,9 +804,11 @@ function job_info {
         QUEUE=$(( $( date +%s ) - $(date +%s -d "$QUEUE")))
         QUEUE=$(show_time $QUEUE)
       else
-        QUEUE="N/A"
+        QUEUE=""
       fi
-      varOut " Queue Time" "$QUEUE" "" $colResult
+      if [[ "$QUEUE" != "" ]] ; then
+        varOut " Queue Time" "$QUEUE" "" $colResult
+      fi
 
     fi
 
