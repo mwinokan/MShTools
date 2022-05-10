@@ -2,6 +2,9 @@
 
 from random import sample
 
+bold="\033[1m"
+clear="\033[0m"
+
 quotes = [
 			"DO IT TOMORROW",
 			"DO DFT TOMORROW",
@@ -29,6 +32,8 @@ quotes = [
 			"I'M BETTER THAN THE MANUAL",
 			"BEFORE TRYING, CONSULT ME",
 			"CODE FIRST, THINK LATER",
+			"WHEN IN DOUBT, CROSS PRODUCT",
+			f"CHEMIS{bold}DO{clear} OR CHEMIS{bold}DON'T{clear}\nTHERE IS NO CHEMIS{bold}TRY{clear}",
 		]
 
 buff = 10
