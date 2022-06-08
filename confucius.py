@@ -51,7 +51,7 @@ quotes = [
 			"WHAT IS A DECIMAL PLACE BETWEEN FRIENDS?",
 			"###SPICY###OF COURSE",
 			f"\u001b[37;44;1m 🇬🇷  OF COURSE {clear}",
-			f"ΩF CΩURSE",
+			"ΩΦ KΩΥΡΣΕ",
 			"FRENCH? SO YOU'RE EASY TO SATISFY",
 			"YOU DON'T WANT TO FINISH TOO EARLY",
 			"BOLD AND UNPROVEN",
