@@ -4,6 +4,12 @@ from random import sample
 
 bold="\033[1m"
 clear="\033[0m"
+inverse="\033[7m"
+underline="\033[4m"
+blue="\033[34m"
+white="\033[37m"
+
+spicy_formats=[bold+blue,underline,bold]
 
 quotes = [
 			"DO IT TOMORROW",
@@ -43,16 +49,40 @@ quotes = [
 			"I HEREBY CLASSIFY THIS AS A ROYAL BALL ACHE",
 			"I'M ALL OUT OF PASSION",
 			"WHAT IS A DECIMAL PLACE BETWEEN FRIENDS?",
+			"###SPICY###OF COURSE",
+			f"\u001b[37;44;1m 🇬🇷  OF COURSE {clear}",
+			f"ΩF CΩURSE",
+			"FRENCH? SO YOU'RE EASY TO SATISFY",
+			"YOU DON'T WANT TO FINISH TOO EARLY",
+			"BOLD AND UNPROVEN",
+			"WHERE IS MY GIRAFFE??",
+			"THIS IS A HIPPOPOTAMUS",
+			"MONOGAMOUS ENTANGLEMENT",
+			"INVEST IN A STRAP-ON",
+			"###SPICY###FRIZZ OFF",
+			"I'M FRIZZED OFF",
+			"I'M GONNA GO TO THAT BUS STATION TOMORROW\nAND KICK MIKE'S ASS",
+			"STRUGGLING FROM SUCCESS",
+			"I'D SHOW YOU MINE;\nBUT I DON'T THINK YOU'D LIKE IT",
+			"I'M SEVERAL RAKI'S DEEP",
+			"DON'T ASK ME QUESTIONS THAT COULD HAVE CONSEQUENCES",
+			"ENORMOUS DRAGON OF FAECES,\nDANCING INSIDE ME",
+			"I HAD A CRISIS OF FAITH IN MY RESEARCH,\nBUT THEN I REALISED THAT IT'S FINE",
 		]
 
 buff = 10
 maxline=0
 
 print("\n"+'"'.rjust(buff+1),end='')
+
 for i,line in enumerate(sample(quotes,1)[0].split("\n")):
 	if i > 0:
 		print("\n"+" ".rjust(buff+1),end='')
-	print(f'{line}',end='')
+	if line.startswith("###SPICY###"):
+		for character in line[11:]:
+			print(f'{sample(spicy_formats,1)[0]}{character}{clear}',end='')
+	else:
+		print(f'{line}',end='')
 	if len(line) > maxline:
 		maxline = len(line)
 print('"\n\033[3m'+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
