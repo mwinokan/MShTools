@@ -530,8 +530,7 @@ function idle_queue {
     OP_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep op | grep -v debug)
     DEBUG_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep debug)
     V2_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep ",v2")
-    CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved)
-    # CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
+    CHEM_IDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep reserved | grep "node43\|node44\|node55\|node56")
     OTHERIDLES=$(sinfo -N -o "%N %R %T %.6m %c %.30f" | grep idle | grep -v op | grep -v debug | grep -v ",v2" | grep -v "node43\|node44\|node55\|node56")
     echo -e "$(echo -e "$HEADER$cGREEN\n$OP_IDLES$cYELLOW\n$V2_IDLES$cCYAN\n$CHEM_IDLES$cRED\n$DEBUG_IDLES$colClear\n$OTHERIDLES$colClear" | column -t)"
   else
@@ -948,16 +947,19 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
+    FIRST=1
     while :
     do
       # capture the output and write it to screen once it is ready
       START=$(date +%s)
       SHOWQUEUE=$(show_queue)
       PREVQUEUE=$(prev_queue)
-      clear
-      echo -e """$SHOWQUEUE"""
-      echo -e """$PREVQUEUE"""
-      echo -e "\n\nPress [CTRL+C] to stop.."
+      NLINES=$(echo -e """$SHOWQUEUE""""""$PREVQUEUE""""\n\nPress [CTRL+C] to stop.." | wc -l)
+      if [ $FIRST -eq 0 ] ; then
+        COMMAND="\u001b["$NLINES"A"
+        printf "$COMMAND"
+      fi
+      echo -e """$SHOWQUEUE""""""$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
       while :
       do
         NOW=$(date +%s)
@@ -966,6 +968,7 @@ else
           break
         fi
       done
+      FIRST=0
     done
   else
     show_queue
