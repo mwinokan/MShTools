@@ -949,11 +949,22 @@ else
   if [ $LOOP -eq 1 ] ; then
     while :
     do
+      # capture the output and write it to screen once it is ready
+      START=$(date +%s)
+      SHOWQUEUE=$(show_queue)
+      PREVQUEUE=$(prev_queue)
       clear
-      show_queue
-      prev_queue
-      echo -e "\nPress [CTRL+C] to stop.."
-      sleep 1.0
+      echo -e """$SHOWQUEUE"""
+      echo -e """$PREVQUEUE"""
+      echo -e "\n\nPress [CTRL+C] to stop.."
+      while :
+      do
+        NOW=$(date +%s)
+        let "DIFF = NOW - START"
+        if [ $DIFF -gt 0 ] ; then
+          break
+        fi
+      done
     done
   else
     show_queue
