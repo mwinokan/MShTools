@@ -55,6 +55,7 @@ JOB_BUFFER=$(scontrol show job $JOB 2>&1)
 WORKDIR=$(echo "$JOB_BUFFER" | grep -oP "(?<=WorkDir=).*")
 
 # change to the job's working directory
-cd $WORKDIR
+echo $WORKDIR
+# cd $WORKDIR
 
 return 0
