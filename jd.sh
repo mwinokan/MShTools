@@ -51,7 +51,7 @@ if [ $VERBOSE -eq 1 ] ; then
 fi
 
 # get the job's working directory
-JOB_BUFFER=$(scontrol show job $JOB 2>&1)
+JOB_BUFFER=$(scontrol show job $JOBID 2>&1)
 WORKDIR=$(echo "$JOB_BUFFER" | grep -oP "(?<=WorkDir=).*")
 
 # change to the job's working directory
