@@ -15,6 +15,7 @@ PENDING=0
 RUNNING=0
 CLUSTER=0
 IDLE=0
+NOFORMAT=0
 HISTORY=0
 JOB=0
 
@@ -51,6 +52,7 @@ while test $# -gt 0; do
       echo -e $colArg"-a "$colClear" Show active jobs about to end for all users"
       echo -e $colArg"-hist [<TIME_STR>]"$colClear" Show a user's history"
       echo -e $colArg"-j <JOB_ID>"$colClear" Show job info"
+      echo -e $colArg"-nf"$colClear" Do not format output"
       exit 1
       ;;
     -l)
@@ -60,6 +62,10 @@ while test $# -gt 0; do
     -nh|--no-headers)
       shift
       HEADERS=0
+      ;;
+    -nf|--no-format)
+      shift
+      NOFORMAT=1
       ;;
     -louie)
       shift
@@ -162,6 +168,21 @@ if [[ $(hostname) == *eslogin* ]] ; then
     qstat -u maxwin
   fi
   exit 0
+fi
+
+if [ $NOFORMAT -eq 1 ] ; then
+  colArg=""
+  colBold=""
+  colClear=""
+  colError=""
+  colFile=""
+  colFunc=""
+  colResult=""
+  colSuccess=""
+  colUnderline=""
+  colVarName=""
+  colVarType=""
+  colWarning=""
 fi
 
 function convert4showtime {
