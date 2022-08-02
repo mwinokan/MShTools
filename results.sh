@@ -59,10 +59,20 @@ FILE_PATTERN=$JOB_NUM
 JOB_NUM=$(basename $JOB_NUM)
 JOB_NUM=${JOB_NUM:0:6}
 
-if [[ $(hostname) == *scarf* ]] ; then
+ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
+if [[ $ALTHOST == *scarf* ]] ; then
   USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
-else
+elif [[ $ALTHOST == uan01 ]] ; then
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+elif [[ $ALTHOST == ln0* ]] ; then
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
   USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+else
+  errorOut "Unrecognised cluster"
+  exit 1
 fi
 
 while :

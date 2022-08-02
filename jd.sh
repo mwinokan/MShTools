@@ -10,8 +10,7 @@ fi
 source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
-if [ $# -eq 0 ] || [ $# -gt 2 ]
-then 
+if [ $# -eq 0 ] ; then 
   echo -e $colError"Wrong number of arguments provided."$colClear
   echo -e "For usage see: "$colFunc"jd.sh"$colClear$colArg" -h "$colClear
   return 1
@@ -30,6 +29,10 @@ while test $# -gt 0; do
 		;;
 	-v|--verbose)
 		VERBOSE=1
+		shift
+		;;
+	-l|--last)
+		JOBID=$(sq -nf --hist "2 weeks" | tail -n1 | awk '{print $1}')
 		shift
 		;;
 	*)

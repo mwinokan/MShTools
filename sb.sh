@@ -36,7 +36,7 @@ while test $# -gt 0; do
   esac
 done
 
-RESULT=$(sbatch $1)
+RESULT=$(sbatch $@)
 EXIT=$?
 
 if [[ "$RESULT" = "Submitted batch job"* ]] ; then
