@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+'''
+
+To-Do's
+
+- 	make a persistent random list that is iterated through sequentially,
+	when the end of the list is reached, rebuild the list
+
+-	display a warning if the script is greatly out of date
+
+'''
+
 from random import sample
 
 bold="\033[1m"
@@ -134,6 +145,11 @@ quotes = [
 			"DO YOU WANT TO SEE MY STUFF JIGGLING?",
 			"WE DON’T SEE COLOURS HERE,\nWE JUST SEE BALLS",
 			"IN MY OPINION THIS IS EXACTLY\nWHAT IS WRONG WITH SCIENCE",
+			"I DIDN’T REALISE YOU WERE A NONCE",
+			"I HEARD YOU LIKE FINISHING EARLY",
+			"JOIN THE QUANTUM BIOLOGY DISCORD SERVER! #GAMERSRISEUP",
+			"WE SHOULD GET SOMETHING VENOMOUS LIKE A PLATYPUS",
+			"THERE IS TOO MUCH ON YOUTUBE ABOUT PLATYPUS CUSTARD",
 		]
 
 buff = 10
