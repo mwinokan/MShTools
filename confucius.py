@@ -153,7 +153,8 @@ quotes = [
 			"WINNING IS NEVER AN OPTION, ONLY REVENGE",
 			"FEDERICO’S ALLEYWAY BOUQUET",
 			"SENT FROM MY GALAXY",
-			"🕔 GOOD HEAVENS, LOOK AT THE TIME!"
+			"  _______\n /  12   \\ \n|    |    |\n|9   |   3|\n|     \\   |\n|         |\n \\___6___/\n\nGOOD HEAVENS, LOOK AT THE TIME!",
+			"Har🌳-Frick ✝️ ",
 		]
 
 buff = 10
