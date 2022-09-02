@@ -157,6 +157,9 @@ quotes = [
 			"Har🌳-Frick ✝️ ",
 			"BRANEURISM\n\nSymptoms:\tlight-headed, delirium,\n\t\tdyslexic, autism,\n\t\t\t\tchicken sounds,\n\t\t\t\tflowcharts\n",
             f"       LISTEN TO PHAT BRAHMS\n        |                   \\\n        V                    \\\n    EAT KATSU                 \\     IS IT FRIDAY? ----> WAIT\n        |                      \\        | Yes  ^   No     |\n        V                       \\       V      L-----------\n    SPIN MESMERISING SPIN ORB   |   IS HILLSIDE OPEN? ---> KATSU\n        |                       |       |           \n        V                       ^       V            \n    {bold}BRANEURYSM{clear}                  |   IS YOUNG'S OPEN ---> KATSU\n      /     \\                   |       |       \n     /YES    \\                  |       V\n    L         NO------->--------|   IS MAX IN THE OFFICE?\nKATSU COMA                      |       | Yes       \\ No\n                                ----<----            \\\n                                                    END THE DAY\n",
+            "I WOULDN’T PAY £100 FOR A WET DREAM,\nFOR £100 I CAN GET A WET REALITY",
+            "I KNOW YOUR FUTURE…\n\nBUT I’LL TELL YOU AFTER I GO TO THE LOO",
+            "YOU ARE HEADING FOR A SMACK",
 		]
 
 buff = 10
