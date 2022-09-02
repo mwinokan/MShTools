@@ -155,6 +155,8 @@ quotes = [
 			"SENT FROM MY GALAXY",
 			"  _______\n /  12   \\ \n|    |    |\n|9   |   3|\n|     \\   |\n|         |\n \\___6___/\n\nGOOD HEAVENS, LOOK AT THE TIME!",
 			"Har🌳-Frick ✝️ ",
+			"BRANEURISM\n\nSymptoms:\tlight-headed, delirium,\n\t\tdyslexic, autism,\n\t\t\t\tchicken sounds,\n\t\t\t\tflowcharts\n",
+            f"       LISTEN TO PHAT BRAHMS\n        |                   \\\n        V                    \\\n    EAT KATSU                 \\     IS IT FRIDAY? ----> WAIT\n        |                      \\        | Yes  ^   No     |\n        V                       \\       V      L-----------\n    SPIN MESMERISING SPIN ORB   |   IS HILLSIDE OPEN? ---> KATSU\n        |                       |       |           \n        V                       ^       V            \n    {bold}BRANEURYSM{clear}                  |   IS YOUNG'S OPEN ---> KATSU\n      /     \\                   |       |       \n     /YES    \\                  |       V\n    L         NO------->--------|   IS MAX IN THE OFFICE?\nKATSU COMA                      |       | Yes       \\ No\n                                ----<----            \\\n                                                    END THE DAY\n",
 		]
 
 buff = 10
@@ -173,3 +175,8 @@ for i,line in enumerate(sample(quotes,1)[0].split("\n")):
 	if len(line) > maxline:
 		maxline = len(line)
 print('"\n\033[3m'+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
+
+
+
+
+       
