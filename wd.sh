@@ -5,8 +5,15 @@ source $MWSHPATH/directory_exists.sh
 
 # check for arguments:
 
-if [ $# -eq 0 ] || [ $# -gt 2 ]
-then 
+if [ $# -eq 0 ] ; then
+    LAST=$(pwd)
+    cd
+    /usr/bin/ls -d WD_*
+    cd $LAST
+    return 0
+fi
+
+if [ $# -gt 2 ] ; then 
   echo -e $colError"Wrong number of arguments provided."$colClear
   echo -e "For usage see: "$colFunc$0$colClear$colArg" -h "$colClear
   return 1
