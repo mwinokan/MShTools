@@ -569,6 +569,7 @@ function replace_usercodes {
   USER=$(echo $USER | sed 's/cv00220/cedric/')
   USER=$(echo $USER | sed 's/rg00700/roisin/')
   USER=$(echo $USER | sed 's/gf00304/george/')
+  USER=$(echo $USER | sed 's/hw00892/harry/')
       
   echo $USER
 
