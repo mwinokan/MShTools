@@ -983,9 +983,10 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
-    FIRST=1
-
     tput smcup
+
+    show_queue 1
+    prev_queue 1
 
     old_tty=$(stty --save)
     stty -icanon min 0
@@ -1008,18 +1009,14 @@ else
             PREVQUEUE=$(prev_queue 1)
 
             # emtpy the screen
-            if [ $FIRST -eq 0 ] ; then
-              COMMAND="\u001b["$NLINES"A"
-              for i in `seq 1 $NLINES`; do
-                echo "$EMPTYSTR"
-              done
-              COMMAND="\u001b["$NLINES"A"
-              printf "$COMMAND"
-            fi
+            COMMAND="\u001b["$NLINES"A"
+            for i in `seq 1 $NLINES`; do
+              echo "$EMPTYSTR"
+            done
+            COMMAND="\u001b["$NLINES"A"
+            printf "$COMMAND"
 
             echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress any key to stop.."
-
-            FIRST=0
         fi       
     done
 
