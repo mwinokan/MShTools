@@ -18,6 +18,7 @@ IDLE=0
 NOFORMAT=0
 HISTORY=0
 JOB=0
+ALTERNATE=0
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
@@ -983,46 +984,81 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
-    tput smcup
-
-    show_queue 1
-    prev_queue 1
-
-    old_tty=$(stty --save)
-    stty -icanon min 0
-
-    NLINES=$(tput lines)
-    NCOLS=$(tput cols)
-
-    EMPTYSTR=""
-
-    for i in `seq 1 $NCOLS`; do
-      EMPTYSTR="$EMPTYSTR "
-    done
-
-    while true ; do
-        if read -t 0; then # Input ready
-            read -n 1 char
-            break
-        else # No input
-            SHOWQUEUE=$(show_queue 1)
-            PREVQUEUE=$(prev_queue 1)
-
-            # emtpy the screen
-            COMMAND="\u001b["$NLINES"A"
-            for i in `seq 1 $NLINES`; do
-              echo "$EMPTYSTR"
-            done
-            COMMAND="\u001b["$NLINES"A"
-            printf "$COMMAND"
-
-            echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress any key to stop.."
-        fi       
-    done
-
-    stty $old_tty
     
-    tput rmcup
+    if [ $ALTERNATE -eq 0 ] ; then
+
+      FIRST=1
+      while :
+      do
+        # capture the output and write it to screen once it is ready
+        START=$(date +%s)
+        SHOWQUEUE=$(show_queue 1)
+        PREVQUEUE=$(prev_queue 1)
+        NLINES=$(echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.." | wc -l)
+        if [ $FIRST -eq 0 ] ; then
+          COMMAND="\u001b["$NLINES"A"
+          printf "$COMMAND"
+        fi
+        echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
+        while :
+        do
+          NOW=$(date +%s)
+          let "DIFF = NOW - START"
+          if [ $DIFF -gt 0 ] ; then
+            break
+          fi
+        done
+        FIRST=0
+      done
+
+    else
+
+      tput smcup
+
+      NLINES=$(tput lines)
+      NCOLS=$(tput cols)
+
+      EMPTYSTR=""
+      for i in `seq 1 $NCOLS`; do
+        EMPTYSTR="$EMPTYSTR "
+      done
+
+      # for i in `seq 1 $NLINES`; do
+      #   echo "$EMPTYSTR"
+      # done
+      # COMMAND="\u001b["$NLINES"A"
+
+      show_queue 1
+      prev_queue 1
+
+      old_tty=$(stty --save)
+      stty -icanon min 0
+
+      while true ; do
+          if read -t 0; then # Input ready
+              read -n 1 char
+              break
+          else # No input
+              SHOWQUEUE=$(show_queue 1)
+              PREVQUEUE=$(prev_queue 1)
+
+              # emtpy the screen
+              COMMAND="\u001b["$NLINES"A"
+              for i in `seq 1 $NLINES`; do
+                echo "$EMPTYSTR"
+              done
+              COMMAND="\u001b["$NLINES"A"
+              printf "$COMMAND"
+
+              echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress any key to stop.."
+          fi       
+      done
+
+      stty $old_tty
+      
+      tput rmcup
+
+    fi
 
   else
     show_queue 1
