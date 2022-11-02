@@ -12,6 +12,7 @@ To-Do's
 '''
 
 from random import sample
+import sys
 
 bold="\033[1m"
 clear="\033[0m"
@@ -180,24 +181,59 @@ quotes = [
 			"WALRUSES RAPING PENGUINS FOR REASONS THAT ARE NOT YET CLEAR",
 		]
 
-buff = 10
-maxline=0
+def main():
 
-print("\n"+'"'.rjust(buff+1),end='')
-
-for i,line in enumerate(sample(quotes,1)[0].split("\n")):
-	if i > 0:
-		print("\n"+" ".rjust(buff+1),end='')
-	if line.startswith("###SPICY###"):
-		for character in line[11:]:
-			print(f'{sample(spicy_formats,1)[0]}{character}{clear}',end='')
+	if len(sys.argv) > 1:
+		if sys.argv[1] == '-l':
+			import time
+			while True:
+				try:
+					show_quote()
+					time.sleep(3)
+				except KeyboardInterrupt:
+					print("\nGoodbye!")
+					break
+		else:
+			try:
+				index = int(sys.argv[1])
+				show_quote(index)
+			except ValueError:
+				if len(sys.argv) > 2:
+					search = ' '.join(sys.argv[1:])
+				else:
+					search = str(sys.argv[1])
+				import re
+				indices = [i+1 for i,q in enumerate(quotes) if re.search(search,q, re.IGNORECASE)]
+				for i in indices:
+					show_quote(index=i)
 	else:
-		print(f'{line}',end='')
-	if len(line) > maxline:
-		maxline = len(line)
-print('"\n\033[3m'+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
+		show_quote()
 
+def show_quote(index=None):
 
+	buff = 10
+	maxline=0
 
+	print("\n"+'"'.rjust(buff+1),end='')
 
-       
+	if index is not None:
+		quote = quotes[index-1]
+		index = index-1
+	else:
+		quote = sample(quotes,1)[0]
+		index = quotes.index(quote)
+
+	for i,line in enumerate(quote.split("\n")):
+		if i > 0:
+			print("\n"+" ".rjust(buff+1),end='')
+		if line.startswith("###SPICY###"):
+			for character in line[11:]:
+				print(f'{sample(spicy_formats,1)[0]}{character}{clear}',end='')
+		else:
+			print(f'{line}',end='')
+		if len(line) > maxline:
+			maxline = len(line)
+	print('"\n\033[3m'+f"-CONFUCIUS #{index+1}".rjust(maxline+2+buff)+"\033[0m\n")
+
+if __name__ == '__main__':
+	main()
