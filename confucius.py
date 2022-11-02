@@ -193,6 +193,13 @@ def main():
 				except KeyboardInterrupt:
 					print("\nGoodbye!")
 					break
+		elif sys.argv[1] == '-h':
+			print(f"\n{inverse}{bold} CONFUCIUS {clear}{inverse} Office Wisdom (TM) {clear}\n")
+			print(f"{bold}confucius.py{blue}{clear}          print a quote")
+			print(f"{bold}confucius.py{blue} -h{clear}       show this screen")
+			print(f"{bold}confucius.py{blue} <NUM>{clear}    show specific quote")
+			print(f"{bold}confucius.py{blue} -l{clear}       loop forever")
+			print(f"{bold}confucius.py{blue} <STRING>{clear} search for quotes\n")
 		else:
 			try:
 				index = int(sys.argv[1])
