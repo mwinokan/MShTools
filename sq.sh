@@ -18,6 +18,7 @@ IDLE=0
 NOFORMAT=0
 HISTORY=0
 JOB=0
+ALTERNATE=0
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
@@ -257,14 +258,15 @@ function header_strings {
 function show_queue {
   header_strings
 
+  if [ ! -z $1 ] ; then
+    echo -e $colBold$USERCODE"'s queue"$colClear
+  fi
+
   # get the queue and number of jobs
   # QUEUE=$(squeue -l -u $USERCODE)
   QUEUE=$(squeue -o "%.18i %.9P %.22j %.8u %.8T %.10M %.9l %.6D %R %v" -u $USERCODE)
   nRUNNING=$(echo -e "$QUEUE" |  grep "RUNNING" | wc -l )
   nPENDING=$(echo -e "$QUEUE" |  grep "PENDING" | wc -l )
-
-  # output
-  echo -e $colBold$USERCODE"'s queue"$colClear
 
   # blank lines for padding
   # NAME_LINE='        '
@@ -275,10 +277,16 @@ function show_queue {
 
   # running job summary
   if [ $nRUNNING -eq 0 ] ; then
-    echo -e $colSuccess"\nNo jobs running."$colClear
+    if [ ! -z $1 ] ; then
+      echo ""
+    fi
+    echo -e $colSuccess"No jobs running."$colClear
   else
 
-    echo -e $colSuccess"\nRunning: $nRUNNING"$colClear"\n"
+    if [ ! -z $1 ] ; then
+      echo ""
+    fi
+    echo -e $colSuccess"Running: $nRUNNING"$colClear"\n"
 
     RAW_HEADER="$colUnderline$colBold""User$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
@@ -351,10 +359,12 @@ function show_queue {
 
   #pending job summary
   if [ $nPENDING -eq 0 ] ; then
-    echo -e $colError"\nNo jobs pending."$colClear
+    echo ""
+    echo -e $colError"No jobs pending."$colClear
   else
 
-    echo -e $colError"\nPending: $nPENDING"$colClear"\n"
+    echo ""
+    echo -e $colError"Pending: $nPENDING"$colClear"\n"
 
     RAW_HEADER="$colUnderline$colBold""User$colClear|"
     RAW_HEADER=$RAW_HEADER$colUnderline$colVarName"Job Name$colClear|"
@@ -430,10 +440,14 @@ function prev_queue {
 
     if [[ $HISTORY != "0" ]] ; then
       LAST_WEEK_DATE=$(date --date="$HISTORY ago" +"%Y-%m-%d")
-      echo -e $colBold$colFile"\nJobs since $LAST_WEEK_DATE ($HISTORY ago):"$colClear
+      if [ ! -z $1 ] ; then
+        echo -e $colBold$colFile"\nJobs since $LAST_WEEK_DATE ($HISTORY ago):"$colClear
+      fi
       sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%30,partition,state,start,elapsed,time,nnodes,ncpus,nodelist%22 | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       " > __temp__
     else
-      echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs (last fortnight):"$colClear
+      if [ ! -z $1 ] ; then
+        echo -e $colBold$colFile"\nPrevious $SHOW_PREV_NUM jobs (last fortnight):"$colClear
+      fi
       LAST_WEEK_DATE=$(date --date="14 days ago" +"%Y-%m-%d")
       sacct --user=$USERCODE --starttime $LAST_WEEK_DATE --format=JobID,Jobname%30,partition,state,start,elapsed,time,nnodes,ncpus,nodelist%22 | grep "COMPLETED\|FAILED\|CANCELLED\|TIMEOUT" | grep -v "extern\|batch\|hydra\|\..*       "| tail -n $SHOW_PREV_NUM > __temp__
     fi
@@ -520,6 +534,7 @@ function prev_queue {
     done < __temp__
 
     echo -ne "$QUEUE" | table.sh -s "|"
+    # echo -ne "$QUEUE"
 
   fi
 
@@ -969,32 +984,85 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
-    FIRST=1
-    while :
-    do
-      # capture the output and write it to screen once it is ready
-      START=$(date +%s)
-      SHOWQUEUE=$(show_queue)
-      PREVQUEUE=$(prev_queue)
-      NLINES=$(echo -e """$SHOWQUEUE""""""$PREVQUEUE""""\n\nPress [CTRL+C] to stop.." | wc -l)
-      if [ $FIRST -eq 0 ] ; then
-        COMMAND="\u001b["$NLINES"A"
-        printf "$COMMAND"
-      fi
-      echo -e """$SHOWQUEUE""""""$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
+    
+    if [ $ALTERNATE -eq 0 ] ; then
+
+      FIRST=1
       while :
       do
-        NOW=$(date +%s)
-        let "DIFF = NOW - START"
-        if [ $DIFF -gt 0 ] ; then
-          break
+        # capture the output and write it to screen once it is ready
+        START=$(date +%s)
+        SHOWQUEUE=$(show_queue 1)
+        PREVQUEUE=$(prev_queue 1)
+        NLINES=$(echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.." | wc -l)
+        if [ $FIRST -eq 0 ] ; then
+          COMMAND="\u001b["$NLINES"A"
+          printf "$COMMAND"
         fi
+        echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
+        while :
+        do
+          NOW=$(date +%s)
+          let "DIFF = NOW - START"
+          if [ $DIFF -gt 0 ] ; then
+            break
+          fi
+        done
+        FIRST=0
       done
-      FIRST=0
-    done
+
+    else
+
+      tput smcup
+
+      NLINES=$(tput lines)
+      NCOLS=$(tput cols)
+
+      EMPTYSTR=""
+      for i in `seq 1 $NCOLS`; do
+        EMPTYSTR="$EMPTYSTR "
+      done
+
+      # for i in `seq 1 $NLINES`; do
+      #   echo "$EMPTYSTR"
+      # done
+      # COMMAND="\u001b["$NLINES"A"
+
+      show_queue 1
+      prev_queue 1
+
+      old_tty=$(stty --save)
+      stty -icanon min 0
+
+      while true ; do
+          if read -t 0; then # Input ready
+              read -n 1 char
+              break
+          else # No input
+              SHOWQUEUE=$(show_queue 1)
+              PREVQUEUE=$(prev_queue 1)
+
+              # emtpy the screen
+              COMMAND="\u001b["$NLINES"A"
+              for i in `seq 1 $NLINES`; do
+                echo "$EMPTYSTR"
+              done
+              COMMAND="\u001b["$NLINES"A"
+              printf "$COMMAND"
+
+              echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress any key to stop.."
+          fi       
+      done
+
+      stty $old_tty
+      
+      tput rmcup
+
+    fi
+
   else
-    show_queue
-    prev_queue
+    show_queue 1
+    prev_queue 1
   fi
   exit 0
 
