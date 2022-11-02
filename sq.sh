@@ -987,19 +987,22 @@ else
     
     if [ $ALTERNATE -eq 0 ] ; then
 
+      SHORT=1
+      # main_loop
       FIRST=1
       while :
       do
         # capture the output and write it to screen once it is ready
         START=$(date +%s)
         SHOWQUEUE=$(show_queue 1)
-        PREVQUEUE=$(prev_queue 1)
-        NLINES=$(echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.." | wc -l)
+        PREVQUEUE=$(prev_queue)
+        BUFFER="""$SHOWQUEUE""""\n""""$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
+        NLINES=$(echo -e """$BUFFER""" | wc -l)
         if [ $FIRST -eq 0 ] ; then
           COMMAND="\u001b["$NLINES"A"
           printf "$COMMAND"
         fi
-        echo -e """$SHOWQUEUE""""""\n$PREVQUEUE""""\n\nPress [CTRL+C] to stop.."
+        echo -e """$BUFFER"""
         while :
         do
           NOW=$(date +%s)
