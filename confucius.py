@@ -11,7 +11,7 @@ To-Do's
 
 '''
 
-from random import sample
+from random import sample,shuffle
 import sys
 
 bold="\033[1m"
@@ -179,6 +179,14 @@ quotes = [
 			"AIDS SALIVA IS A-OK\nSO YOU CAN GIVE THAT WHISTLE A SUCK",
 			"NO ONE EVER SAID NOT TO EAT YELLOW RICE",
 			"WALRUSES RAPING PENGUINS FOR REASONS THAT ARE NOT YET CLEAR",
+			"THEY NEVER SAID DON'T EAT YELLOW RICE",
+			"RUINING PEOPLE'S CAREERS BY KEEPING THEM IN THE SAME PLACE\nJUST BECAUSE I DID",
+			"WHEN I FIRST STARTED LECTURING I DID A LOT OF BUM WIGGLING",
+			"I DON'T UNDERSTAND HAVING VALUES",
+			"PISS",
+			"THAT'S THE ONLY REASON I'M NOT EATING YOUR FACE OFF NOW",
+			"DOUBLE-TEAMED BY GERIATRICS",
+			"LIMPINGCHAN",
 		]
 
 def main():
@@ -186,9 +194,11 @@ def main():
 	if len(sys.argv) > 1:
 		if sys.argv[1] == '-l':
 			import time
-			while True:
+			indices = [i for i in range(len(quotes))]
+			shuffle(indices)
+			for index in indices:
 				try:
-					show_quote()
+					show_quote(index)
 					time.sleep(3)
 				except KeyboardInterrupt:
 					print("\nGoodbye!")
@@ -224,13 +234,21 @@ def show_quote(index=None):
 	print("\n"+'"'.rjust(buff+1),end='')
 
 	if index is not None:
-		quote = quotes[index-1]
-		index = index-1
+		try:
+			quote = quotes[index-1]
+			# index = index-1
+			index = quotes.index(quote)
+		except IndexError:
+			index = len(quotes)
+			quote = quotes[index-1]
+			index = quotes.index(quote)
 	else:
 		quote = sample(quotes,1)[0]
 		index = quotes.index(quote)
 
-	for i,line in enumerate(quote.split("\n")):
+	lines = quote.split("\n")
+
+	for i,line in enumerate(lines):
 		if i > 0:
 			print("\n"+" ".rjust(buff+1),end='')
 		if line.startswith("###SPICY###"):
@@ -240,7 +258,11 @@ def show_quote(index=None):
 			print(f'{line}',end='')
 		if len(line) > maxline:
 			maxline = len(line)
-	print('"\n\033[3m'+f"-CONFUCIUS #{index+1}".rjust(maxline+2+buff)+"\033[0m\n")
+	
+	if len(lines) == 1 and maxline < 15:
+		print('"\033[3m'+f"  -CONFUCIUS #{index+1}\033[0m\n")
+	else:
+		print('"\n\033[3m'+f"-CONFUCIUS #{index+1}".rjust(maxline+2+buff)+"\033[0m\n")
 
 if __name__ == '__main__':
 	main()
