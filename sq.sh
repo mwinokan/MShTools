@@ -18,7 +18,7 @@ IDLE=0
 NOFORMAT=0
 HISTORY=0
 JOB=0
-ALTERNATE=1
+ALTERNATE=0
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
