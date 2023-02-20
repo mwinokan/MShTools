@@ -9,7 +9,7 @@ source $MWSHPATH/colours.sh
 source $MWSHPATH/out.sh
 
 LOOP=0
-SHORT=0
+SHORT=1
 HEADERS=1
 PENDING=0
 RUNNING=0
@@ -18,7 +18,7 @@ IDLE=0
 NOFORMAT=0
 HISTORY=0
 JOB=0
-ALTERNATE=0
+ALTERNATE=1
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
@@ -984,8 +984,10 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
-    
-    if [ $ALTERNATE -eq 0 ] ; then
+
+    if command -v loop_win.py ; then
+	loop_win.py sq.sh
+    elif [ $ALTERNATE -eq 0 ] ; then
 
       SHORT=1
       # main_loop
