@@ -11,7 +11,8 @@ To-Do's
 
 '''
 
-from random import sample
+from random import sample,shuffle
+import sys
 
 bold="\033[1m"
 clear="\033[0m"
@@ -178,26 +179,124 @@ quotes = [
 			"AIDS SALIVA IS A-OK\nSO YOU CAN GIVE THAT WHISTLE A SUCK",
 			"NO ONE EVER SAID NOT TO EAT YELLOW RICE",
 			"WALRUSES RAPING PENGUINS FOR REASONS THAT ARE NOT YET CLEAR",
+			"THEY NEVER SAID DON'T EAT YELLOW RICE",
+			"RUINING PEOPLE'S CAREERS BY KEEPING THEM IN THE SAME PLACE\nJUST BECAUSE I DID",
+			"WHEN I FIRST STARTED LECTURING\nI DID A LOT OF BUM WIGGLING",
+			"I DON'T UNDERSTAND HAVING VALUES",
+			"PISS",
+			"THAT'S THE ONLY REASON I'M NOT\nEATING YOUR FACE OFF RIGHT NOW",
+			"DOUBLE-TEAMED BY GERIATRICS",
+			"LIMPINGCHAN",
+			"LET'S HAVE A QUICK CHAT?\nI NEED TO VENT SOME ANGER!",
+			"THE FRENCHMAN BURNS EASILY",
+			"WHY IS THE BROWN ALWAYS CAUSING PROBLEMS",
+			"QUANTUM NATIONALISM",
+			"THERE IS NO SUCH THING AS TIME",
+			"IS OUR BANANA CORRECT?",
+			"WOULD YOU RATHER:\n\nWALLACE HAMMERING FOR AN HOUR\n\nOR\n\nA BRIEF AL-QAEDA MOMENT?",
+			"THE CONSPIRACY GROWS",
+			"YOU'RE LOOKING GUILTIER BY THE SECOND",
+			"I HAD TO MAKE SOMETHING, BUT I ONLY DESTROY",
+			"QUANTUM CRY FOR HELP",
+			"QB SOS",
+			"UNFORUNATELY THE JAVA VERSION ON EUREKA IS TOO OLD TO RUN MINECRAFT",
+			"NOBODY CARES, ESPECIALLY ME",
+			"GEOGRAPHICALLY-CHALLENGED",
+			"I GUESS THAT'S ONE GOOD THING ABOUT FASCISTS",
+			"TESTICLES HAVE SO MUCH POTENTIAL",
+			"WHENEVER IN DOUBT, GIVE LOUIE A SHOUT",
+			"IF IN MOGADISHU, TELL LOUIE 'I MISS YOU'",
+			"IF YOU'RE IN A PICKLE,\nGIVE LOUIE A TICKLE",
+			"DOORS - UNLIKE PEOPLE - CAN BE UNFUCKED",
+			"ARE YOU GOING TO GO TO HIS OFFICE, LIFT HIS ARMS UP\nAND GET YOUR FINGERS IN THERE?",
+			"I CANNOT RIPEN MY OWN BANANA",
+			"I DO BELIEVE!",
+			"GREAT MINDS THINK THE SAME JUNK",
+			"""HI EVERYONE.\nHOW DO YOU KEEP WORKING WITH A COLLABORATOR IF\nYOUR LAST MEETING ENDED WITH YOU SAYING\n\n"SPARE ME THIS USELESS AND AGGRESSIVE RHETORIC,\n'CAUSE I DON'T NEED IT, OR CARE ABOUT IT"?""",
+			"LUCKILY SCIENCE AND DFT CALCULATIONS,\nDO NOT CARE ABOUT YOUR IMPRESSION OF THEM",
+			"I WAS ONLY DOING AN IMPRESSION OF A NONCE!",
+			"I GUESS WE ALL LEAVE AS FLESH",
+			"SHOULD I BUY AN END OF LIFE PLANNER FOR MY PHD?",
+			"WE NEED MORE MONEY TO\nMAKE STUDENTS SUFFER",
+			"I WON'T TELL YOU WHAT TO DO,\nI'LL JUST JUDGE YOU",
+			"NO, YOU DO NOT NEED TO STAY IN QB.\nAND YOU MIGHT NOT WANT TO DO SO",
+			"SHIT CODE IS THE FIRST STEP TO NOT SHIT CODE",
 		]
 
-buff = 10
-maxline=0
+def main():
 
-print("\n"+'"'.rjust(buff+1),end='')
-
-for i,line in enumerate(sample(quotes,1)[0].split("\n")):
-	if i > 0:
-		print("\n"+" ".rjust(buff+1),end='')
-	if line.startswith("###SPICY###"):
-		for character in line[11:]:
-			print(f'{sample(spicy_formats,1)[0]}{character}{clear}',end='')
+	if len(sys.argv) > 1:
+		if sys.argv[1] == '-l':
+			import time
+			indices = [i for i in range(len(quotes))]
+			shuffle(indices)
+			for index in indices:
+				try:
+					show_quote(index)
+					time.sleep(3)
+				except KeyboardInterrupt:
+					print("\nGoodbye!")
+					break
+		elif sys.argv[1] == '-h':
+			print(f"\n{inverse}{bold} CONFUCIUS {clear}{inverse} Office Wisdom (TM) {clear}\n")
+			print(f"{bold}confucius.py{blue}{clear}          print a quote")
+			print(f"{bold}confucius.py{blue} -h{clear}       show this screen")
+			print(f"{bold}confucius.py{blue} <NUM>{clear}    show specific quote")
+			print(f"{bold}confucius.py{blue} -l{clear}       loop forever")
+			print(f"{bold}confucius.py{blue} <STRING>{clear} search for quotes\n")
+		else:
+			try:
+				index = int(sys.argv[1])
+				show_quote(index)
+			except ValueError:
+				if len(sys.argv) > 2:
+					search = ' '.join(sys.argv[1:])
+				else:
+					search = str(sys.argv[1])
+				import re
+				indices = [i+1 for i,q in enumerate(quotes) if re.search(search,q, re.IGNORECASE)]
+				for i in indices:
+					show_quote(index=i)
 	else:
-		print(f'{line}',end='')
-	if len(line) > maxline:
-		maxline = len(line)
-print('"\n\033[3m'+"-CONFUCIUS".rjust(maxline+2+buff)+"\033[0m\n")
+		show_quote()
 
+def show_quote(index=None):
 
+	buff = 10
+	maxline=0
 
+	print("\n"+'"'.rjust(buff+1),end='')
 
-       
+	if index is not None:
+		try:
+			quote = quotes[index-1]
+			# index = index-1
+			index = quotes.index(quote)
+		except IndexError:
+			index = len(quotes)
+			quote = quotes[index-1]
+			index = quotes.index(quote)
+	else:
+		quote = sample(quotes,1)[0]
+		index = quotes.index(quote)
+
+	lines = quote.split("\n")
+
+	for i,line in enumerate(lines):
+		if i > 0:
+			print("\n"+" ".rjust(buff+1),end='')
+		if line.startswith("###SPICY###"):
+			for character in line[11:]:
+				print(f'{sample(spicy_formats,1)[0]}{character}{clear}',end='')
+		else:
+			print(f'{line}',end='')
+		if len(line) > maxline:
+			maxline = len(line)
+	
+	if len(lines) == 1 and maxline < 15:
+		print('"\033[3m'+f"  -CONFUCIUS #{index+1}\033[0m\n")
+	else:
+		print('"\n\033[3m'+f"-CONFUCIUS #{index+1}".rjust(maxline+2+buff)+"\033[0m\n")
+
+if __name__ == '__main__':
+	main()

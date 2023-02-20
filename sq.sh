@@ -783,9 +783,9 @@ function job_info {
     fi
 
     if [ "$NODELIST" == "" ] ; then
-      varOut "    # Nodes" "$NUM_NODES nodes" "" $colVarType
+      varOut "     #Nodes" "$NUM_NODES nodes" "" $colVarType
     else
-      varOutEx "    # Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
+      varOutEx "     #Nodes" "$NUM_NODES nodes" "$NODELIST" $colVarType $colArg
     fi
     
     NUM_CPUS=$(echo "$JOB_BUFFER" | grep -oP "(?<=NumCPUs=).*(?= NumTasks)")
@@ -853,6 +853,16 @@ function job_info {
 
     COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
     varOut "     Script" "$COMMAND" "" $colFile
+
+    if [ -f $WORKDIR/$JOB*.o ] ; then
+      O_LINES=$(wc -l $WORKDIR/$JOB*.o | awk '{ print $1 }')
+      varOut " \$JOB*.o #l" "$O_LINES" "" $colResult
+    fi
+
+    if [ -f $WORKDIR/$JOB*.e ] ; then
+      E_LINES=$(wc -l $WORKDIR/$JOB*.e | awk '{ print $1 }')
+      varOut " \$JOB*.e #l" "$E_LINES" "" $colResult
+    fi
 
     if [ "$DEPENDENCY" != "(null)" ] ; then
       IFS=":"
@@ -926,7 +936,18 @@ if [ $CLUSTER -ne 0 ] ; then
 
 elif [ $JOB -ne 0 ] ; then
 
-  job_info
+  if [ $LOOP -eq 1 ] ; then
+    while :
+    do
+      BUFFER=$(job_info)
+      clear
+      echo """$BUFFER"""
+      echo -e "\nPress [CTRL+C] to stop.."
+      sleep 1.0
+    done
+  else
+    job_info
+  fi
 
 elif [ "$HISTORY" != "0" ] ; then
   if [ "$HISTORY" == "" ] ; then
