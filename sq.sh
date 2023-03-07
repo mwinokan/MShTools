@@ -88,6 +88,10 @@ while test $# -gt 0; do
       shift
       USERCODE=gf00304
       ;;
+    -juliana)
+      shift
+      USERCODE=jd01548
+      ;;
     -harry)
       shift
       USERCODE=hw00892
@@ -585,6 +589,7 @@ function replace_usercodes {
   USER=$(echo $USER | sed 's/rg00700/roisin/')
   USER=$(echo $USER | sed 's/gf00304/george/')
   USER=$(echo $USER | sed 's/hw00892/harry/')
+  USER=$(echo $USER | sed 's/jd01548/juliana/')
       
   echo $USER
 
