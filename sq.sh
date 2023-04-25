@@ -18,7 +18,7 @@ IDLE=0
 NOFORMAT=0
 HISTORY=0
 JOB=0
-ALTERNATE=0
+ALTERNATE=1
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
@@ -87,6 +87,10 @@ while test $# -gt 0; do
     -george)
       shift
       USERCODE=gf00304
+      ;;
+    -juliana)
+      shift
+      USERCODE=jd01548
       ;;
     -harry)
       shift
@@ -585,6 +589,7 @@ function replace_usercodes {
   USER=$(echo $USER | sed 's/rg00700/roisin/')
   USER=$(echo $USER | sed 's/gf00304/george/')
   USER=$(echo $USER | sed 's/hw00892/harry/')
+  USER=$(echo $USER | sed 's/jd01548/juliana/')
       
   echo $USER
 
@@ -1005,8 +1010,10 @@ elif [ $RUNNING -eq 1 ] ; then
 else
 
   if [ $LOOP -eq 1 ] ; then
-    
-    if [ $ALTERNATE -eq 0 ] ; then
+
+    if command -v loop_win.py ; then
+	loop_win.py sq.sh
+    elif [ $ALTERNATE -eq 0 ] ; then
 
       SHORT=1
       # main_loop
