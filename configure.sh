@@ -68,7 +68,7 @@ function auto_configure {
 
       echo $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
 
-      configure_gitlab $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
+      configure_gitlab "$FULL_NAME" "$USER_CODE" "$CODE_EMAIL" "$STAFF_EMAIL" "$ACCESS_TOKEN"
 
     else
 
