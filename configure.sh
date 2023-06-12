@@ -28,7 +28,7 @@ function auto_configure {
     HOSTNAME=$(hostname -f)
 
     # if on a surrey cluster
-    if [ $HOSTNAME == *surrey* ]; then
+    if [ $HOSTNAME == *surrey* ] || [ $HOSTNAME == *eureka* ]; then
 
       echo "Detected a Surrey HPC, if this is wrong exit this process with Ctrl-C!!!"
 
