@@ -64,6 +64,10 @@ function auto_configure {
           ;;
       esac
 
+      echo $ACCESS_TOKEN
+
+      echo $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
+
       configure_gitlab $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
 
     else
@@ -102,8 +106,8 @@ function configure_gitlab {
   echo "author="$1";" >> .suppressed_gitlab
   echo "surrey_usercode="$2";" >> .suppressed_gitlab
   echo "surrey_staffname="$3";" >> .suppressed_gitlab
-  echo "surrey_useremail="$2"@surrey.ac.uk;" >> .suppressed_gitlab
-  echo "surrey_staffemail="$3"@surrey.ac.uk;" >> .suppressed_gitlab
+  echo "surrey_useremail="$2";" >> .suppressed_gitlab
+  echo "surrey_staffemail="$3";" >> .suppressed_gitlab
   echo "token="$4";" >> .suppressed_gitlab
 
 }
@@ -158,7 +162,7 @@ echo "If automatic setup fails, you can try setting the relevant details manuall
 echo
 
 echo "configure.sh --configure-github <author_name> <user> <email>"
-echo "configure.sh --configure-gitlab <author_name> <surey_usercode> <surrey_staffname> <gitlab_token>"
+echo "configure.sh --configure-gitlab <author_name> <surey_email> <surrey_staff_email> <gitlab_token>"
 echo "configure.sh --configure-extern <username>"
 echo
 echo "If problems persist try asking Max."
