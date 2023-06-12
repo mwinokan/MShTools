@@ -10,17 +10,17 @@ function auto_configure {
   echo "Do you want to set-up github credentials? (Y/N)"
   read CHOICE
 
-  if [ $CHOICE == 'Y' ] ; then
+  case $CHOICE in
+    [yY][eE][sS]|[yY])
+      echo "Enter your Github username:"
+      read GITHUB_USER
 
-    echo "Enter your Github username:"
-    read GITHUB_USER
+      echo "Enter your Github email:"
+      read GITHUB_EMAIL
 
-    echo "Enter your Github email:"
-    read GITHUB_EMAIL
-
-    configure_github $FULL_NAME $GITHUB_USER $GITHUB_EMAIL
-
-  fi
+      configure_github $FULL_NAME $GITHUB_USER $GITHUB_EMAIL
+      ;;
+  esac
 
   # if in an SSH session
   if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
@@ -40,26 +40,34 @@ function auto_configure {
 
       CODE_EMAIL=$USER_CODE@surrey.ac.uk
 
-      if [ $CHOICE == 'Y' ] ; then
-        echo "Enter your staff email:"
-        read STAFF_EMAIL
-      else
-        STAFF_EMAIL=$CODE_EMAIL
-      fi
+      case $CHOICE in
+        [yY][eE][sS]|[yY])
+          echo "Enter your staff email:"
+          read STAFF_EMAIL
+          ;;
+        *)
+          STAFF_EMAIL=$CODE_EMAIL
+          ;;
+      esac
 
       echo "Do you have a Gitlab access token? (Y/N)"
       read CHOICE
 
-      if [ $CHOICE == 'Y' ] ; then
-        echo "Enter your access token:"
-        read ACCESS_TOKEN
-      else
-        ACCESS_TOKEN="XXX"
-      fi
-
+      case $CHOICE in
+        [yY][eE][sS]|[yY])
+          echo "Enter your access token:"
+          read ACCESS_TOKEN
+          ;;
+        *)
+          ACCESS_TOKEN="XXX"
+          ;;
+      esac
+      
       configure_gitlab $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
 
     else
+
+      echo "Did not detect a Surrey HPC."
 
       echo "Guessed username from whoami as: "$USER_CODE
       USER_CODE=$(whoami)
