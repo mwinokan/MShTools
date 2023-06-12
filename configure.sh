@@ -26,6 +26,7 @@ function auto_configure {
   if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
 
     HOSTNAME=$(hostname -f)
+    echo "hostname="$HOSTNAME
 
     # if on a surrey cluster
     if [ $HOSTNAME == *surrey* ] || [ $HOSTNAME == *eureka* ]; then
@@ -62,7 +63,7 @@ function auto_configure {
           ACCESS_TOKEN="XXX"
           ;;
       esac
-      
+
       configure_gitlab $FULL_NAME $USER_CODE $CODE_EMAIL $STAFF_EMAIL $ACCESS_TOKEN
 
     else
