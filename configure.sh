@@ -136,11 +136,11 @@ while test $# -gt 0; do
       configure_extern $1
       exit 0
       ;;
-    --auto)
-      # run auto-configuration
-      auto_configure
-      exit 0
-      ;;
+    # --auto)
+    #   # run auto-configuration
+    #   auto_configure
+    #   exit 0
+    #   ;;
     *)
       break
       ;;
@@ -153,12 +153,12 @@ echo "--------------"
 echo
 echo "This setup is required for many of the scripts in this repository."
 echo
-echo "The easiest way to run this script is to run the command as follows:"
-echo 
-echo "configure.sh --auto"
-echo
+# echo "The easiest way to run this script is to run the command as follows:"
+# echo 
+# echo "configure.sh --auto"
+# echo
 
-echo "If automatic setup fails, you can try setting the relevant details manually:"
+# echo "If automatic setup fails, you can try setting the relevant details manually:"
 echo
 
 echo "configure.sh --configure-github <author_name> <user> <email>"
