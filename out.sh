@@ -1,13 +1,13 @@
 #!/bin/bash -u
 
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/colours.sh
 
 # To-Do's
 
 # fancyOut <HEADER>
 ECHO_STR=" >>> "
 function fancyOut {
-  echo -e $colBold$ECHO_STR$1" [ "$(/usr/bin/date)" ] "$colClear
+  echo -e $colBold$ECHO_STR$1" [ "$(date)" ] "$colClear
 }
 
 # headerOut <HEADER> [<ECHO_STR>]
