@@ -51,7 +51,7 @@ This repository contains several scripts to improve quality of life in terminal 
 
 `cd MShTools`
 
-`echo "export MWSHPATH=$PWD" >> ~/.bash_profile`
+`echo "export MSHTOOLS=$PWD" >> ~/.bash_profile`
 
 `echo 'export PATH=$MSHTOOLS:$PATH' >> ~/.bash_profile`
 
