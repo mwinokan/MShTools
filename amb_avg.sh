@@ -1,8 +1,8 @@
 #!/bin/bash
 
-source $MWSHPATH/load_amb.sh
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/load_amb.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 
 while test $# -gt 0; do

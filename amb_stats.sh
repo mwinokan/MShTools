@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MWSHPATH/out.sh
+source $MSHTOOLS/out.sh
 
 EMS=0
 LG=0

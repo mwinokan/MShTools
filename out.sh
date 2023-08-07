@@ -1,6 +1,6 @@
 #!/bin/bash -u
 
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/colours.sh
 
 # To-Do's
 

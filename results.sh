@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/colours.sh
 
 LOOP=0
 DIR=0
@@ -61,15 +61,15 @@ JOB_NUM=${JOB_NUM:0:6}
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == uan01 ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == ln0* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 else
   errorOut "Unrecognised cluster"
   exit 1

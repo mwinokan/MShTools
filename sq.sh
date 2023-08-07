@@ -5,8 +5,8 @@
 #  - Show node category in running queue
 #  - Pretty output for pending queue
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 LOOP=0
 SHORT=1
@@ -22,15 +22,15 @@ ALTERNATE=1
 
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
 if [[ $ALTHOST == *scarf* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == uan01 ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == ln0* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_extern)
+  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
 elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 else
   errorOut "Unrecognised cluster"
   exit 1
