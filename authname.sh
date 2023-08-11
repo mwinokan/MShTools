@@ -5,7 +5,7 @@ BIB_LESS=0
 # FILE=master.bib
 FILE=$(ls -lt *.bib | head -n1 | awk '{print $9}')
 
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/colours.sh
 
 while test $# -gt 0; do
   case "$1" in

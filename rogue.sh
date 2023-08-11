@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-source $MWSHPATH/out.sh
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/out.sh
+source $MSHTOOLS/colours.sh
 
-USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 
 while test $# -gt 0; do
   case "$1" in

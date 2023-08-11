@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # source necessary files
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
-source $MWSHPATH/directory_exists.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
+source $MSHTOOLS/directory_exists.sh
 
 # check number of arguments
 if [ $# -eq 0 ]
@@ -70,7 +70,7 @@ while test $# -gt 0; do
       ;;
     -s|--surrey)
       SURREY=1
-      USEREMAIL=$($MYGREP "(?<=useremail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+      USEREMAIL=$($MYGREP "(?<=useremail=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
       echo -e $colWarning"Using $USEREMAIL GitLab credentials."$colClear
       shift
       ;;
@@ -160,23 +160,23 @@ else
   
   # Get the author name
   if [ $DARWIN -eq 0 ] ; then
-    AUTH=$($MYGREP -oP "(?<=author=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    AUTH=$($MYGREP -oP "(?<=author=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
   else
-    AUTH=$(perl -nle'print $& while m{(?<=author=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+    AUTH=$(perl -nle'print $& while m{(?<=author=).*(?=;)}g' $MSHTOOLS/.suppressed_gitlab)
   fi
   if [[ -z $AUTH ]] ; then 
-    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    echo -e $colError'grep error (ensure $MSHTOOLS/configure.sh --configure-gitlab ... has been run)'$colClear
     exit 1
   fi
 
   # Get the email
   if [ $DARWIN -eq 0 ] ; then
-    EMAIL=$($MYGREP -oP "(?<=staffemail=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    EMAIL=$($MYGREP -oP "(?<=staffemail=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
   else
-    EMAIL=$(perl -nle'print $& while m{(?<=staffemail=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+    EMAIL=$(perl -nle'print $& while m{(?<=staffemail=).*(?=;)}g' $MSHTOOLS/.suppressed_gitlab)
   fi
   if [[ -z $EMAIL ]] ; then 
-    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    echo -e $colError'grep error (ensure $MSHTOOLS/configure.sh --configure-gitlab ... has been run)'$colClear
     exit 2
   fi
 
@@ -221,23 +221,23 @@ else
   
   # Get gitlab authorisation token
   if [ $DARWIN -eq 0 ] ; then
-    TOKEN=$($MYGREP -oP "(?<=token=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    TOKEN=$($MYGREP -oP "(?<=token=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
   else
-    TOKEN=$(perl -nle'print $& while m{(?<=token=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+    TOKEN=$(perl -nle'print $& while m{(?<=token=).*(?=;)}g' $MSHTOOLS/.suppressed_gitlab)
   fi
   if [[ -z $TOKEN ]] ; then 
-    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    echo -e $colError'grep error (ensure $MSHTOOLS/configure.sh --configure-gitlab ... has been run)'$colClear
     exit 3
   fi
 
   # Get surrey usercode
   if [ $DARWIN -eq 0 ] ; then
-    USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+    USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
   else
-    USERCODE=$(perl -nle'print $& while m{(?<=usercode=).*(?=;)}g' $MWSHPATH/.suppressed_gitlab)
+    USERCODE=$(perl -nle'print $& while m{(?<=usercode=).*(?=;)}g' $MSHTOOLS/.suppressed_gitlab)
   fi
   if [[ -z $USERCODE ]] ; then 
-    echo -e $colError'grep error (ensure $MWSHPATH/configure.sh --configure-gitlab ... has been run)'$colClear
+    echo -e $colError'grep error (ensure $MSHTOOLS/configure.sh --configure-gitlab ... has been run)'$colClear
     exit 4
   fi
 

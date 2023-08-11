@@ -7,8 +7,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]] ; then
 		exit 2
 fi
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 if [ $# -eq 0 ] ; then 
   echo -e $colError"Wrong number of arguments provided."$colClear
@@ -50,7 +50,7 @@ done
 
 # if verbose print the job info
 if [ $VERBOSE -eq 1 ] ; then
-	$MWSHPATH/sq.sh -j $JOBID
+	$MSHTOOLS/sq.sh -j $JOBID
 fi
 
 # get the job's working directory

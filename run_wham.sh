@@ -63,7 +63,7 @@ done
 TOL="0.0001"
 TEMP=300
 
-source $MWSHPATH/out.sh
+source $MSHTOOLS/out.sh
 
 if [[ -z "$RUNDIR" ]] ; then
   errorOut "No directory specified"

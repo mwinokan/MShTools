@@ -51,10 +51,10 @@ This repository contains several scripts to improve quality of life in terminal 
 
 `cd MShTools`
 
-`echo "export MWSHPATH=$PWD" >> ~/.bash_profile`
+`echo "export MSHTOOLS=$PWD" >> ~/.bash_profile`
 
-`echo 'export PATH=$MWSHPATH:$PATH' >> ~/.bash_profile`
+`echo 'export PATH=$MSHTOOLS:$PATH' >> ~/.bash_profile`
 
   * Many scripts require Surrey and gitlab credentials. Create the files using `configure.sh`, see `configure.sh -h` and comments in script for information.
-  * `wd` and other scripts need to be sourced to run, you may wish to add the following alias to your `.bash_profile`: `alias wd='source $MWSHPATH/wd.sh'`
-  * You may prefer to define aliases for `newgit.sh`, `results.sh`, and `sq.sh` - i.e. `alias newgit='bash $MWSHPATH/newgit.sh'`
+  * `wd` and other scripts need to be sourced to run, you may wish to add the following alias to your `.bash_profile`: `alias wd='source $MSHTOOLS/wd.sh'`
+  * You may prefer to define aliases for `newgit.sh`, `results.sh`, and `sq.sh` - i.e. `alias newgit='bash $MSHTOOLS/newgit.sh'`

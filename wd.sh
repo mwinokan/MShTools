@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/directory_exists.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/directory_exists.sh
 
 # check for arguments:
 

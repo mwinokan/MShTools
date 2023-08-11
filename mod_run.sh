@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MWSHPATH/out.sh
+source $MSHTOOLS/out.sh
 
 function scriptCheck {
   SHEBANG=$(head -n 1 $1)

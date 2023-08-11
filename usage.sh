@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MWSHPATH/out.sh
+source $MSHTOOLS/out.sh
 
 SCRATCH_DU=$(du -hs $HOME/parallel_scratch/ | awk '{print $1}')
 HOME_DU=$(du -hs $HOME | awk '{print $1}')

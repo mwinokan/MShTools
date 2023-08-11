@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MWSHPATH/out.sh
+source $MSHTOOLS/out.sh
 
 for _ in once; do
 	ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
@@ -40,7 +40,7 @@ RESULT=$(sbatch $@)
 EXIT=$?
 
 if [[ "$RESULT" = "Submitted batch job"* ]] ; then
-	$MWSHPATH/sq.sh -j $(echo "$RESULT" | awk '{print $4}')
+	$MSHTOOLS/sq.sh -j $(echo "$RESULT" | awk '{print $4}')
 else
 	errorOut "Problem submitting job:"
 	echo "$RESULT"

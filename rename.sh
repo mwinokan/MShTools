@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 TEST=0
 

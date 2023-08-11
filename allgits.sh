@@ -6,8 +6,8 @@
 # https://github.com/mwinokan/MShTools
 
 # Libraries
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 # Defaults:
 SHORT=1
@@ -75,8 +75,8 @@ while test $# -gt 0; do
   esac
 done
 
-if [[ ! -e $MWSHPATH/.suppressed_github || ! -e $MWSHPATH/.suppressed_gitlab ]] ; then
-  errorOut "Could not locate $MWSHPATH/.suppressed_git??b"
+if [[ ! -e $MSHTOOLS/.suppressed_github || ! -e $MSHTOOLS/.suppressed_gitlab ]] ; then
+  errorOut "Could not locate $MSHTOOLS/.suppressed_git??b"
   errorOut "Remember to setup MShTools using $colFunc""configure.sh"
   exit 1
 fi
@@ -88,23 +88,23 @@ else
 fi
 
 # Get the suppressed user info
-GH_USER=$($MYGREP -oP "(?<=user=).*(?=;)" $MWSHPATH/.suppressed_github)
-GH_EMAIL=$($MYGREP -oP "(?<=email=).*(?=;)" $MWSHPATH/.suppressed_github)
-GL_USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
-GL_STAFFNAME=$($MYGREP -oP "(?<=staffname=).*(?=;)" $MWSHPATH/.suppressed_gitlab)
+GH_USER=$($MYGREP -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_github)
+GH_EMAIL=$($MYGREP -oP "(?<=email=).*(?=;)" $MSHTOOLS/.suppressed_github)
+GL_USERCODE=$($MYGREP -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
+GL_STAFFNAME=$($MYGREP -oP "(?<=staffname=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
 
-if [ ! -e $MWSHPATH/.all_gits ] ; then
+if [ ! -e $MSHTOOLS/.all_gits ] ; then
   # Find all the .git folders in home directory:
   echo "Searching for repositories in \$HOME..."
-  find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
+  find $HOME -iname ".git" 2> /dev/null | sort > $MSHTOOLS/.all_gits
 elif [ $UPDATE -eq 1 ] ; then
   # Find all the .git folders in home directory:
   echo "Searching for repositories in \$HOME..."
-  find $HOME -iname ".git" 2> /dev/null | sort > $MWSHPATH/.all_gits
+  find $HOME -iname ".git" 2> /dev/null | sort > $MSHTOOLS/.all_gits
 fi
 
 # Get the list of repositories
-ALL_GITS=$(cat $MWSHPATH/.all_gits)
+ALL_GITS=$(cat $MSHTOOLS/.all_gits)
 
 # Write the list of all the .git paths to temporary file
 echo -e "$ALL_GITS" > __temp__

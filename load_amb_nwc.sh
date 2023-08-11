@@ -14,8 +14,8 @@ PRETASK=""
 
 KILL=0
 
-source $MWSHPATH/colours.sh
-source $MWSHPATH/out.sh
+source $MSHTOOLS/colours.sh
+source $MSHTOOLS/out.sh
 
 while test $# -gt 0; do
 	case "$1" in
@@ -87,7 +87,7 @@ varOut "Path" $(pwd)
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]] ; then
 	echo "Please source this script. i.e. :"
-	echo "source \$MWSHPATH/load_amb_nwc.sh <N_NWCHEM_THREADS>"
+	echo "source \$MSHTOOLS/load_amb_nwc.sh <N_NWCHEM_THREADS>"
 	exit 1
 fi
 

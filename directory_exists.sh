@@ -1,6 +1,6 @@
 #!/bin/bash -u
 
-source $MWSHPATH/colours.sh
+source $MSHTOOLS/colours.sh
 
 # FUNCTIONS
 # directoryExists - Does the directory exist?
