@@ -7,7 +7,7 @@ source $MSHTOOLS/colours.sh
 # fancyOut <HEADER>
 ECHO_STR=" >>> "
 function fancyOut {
-  echo -e $colBold$ECHO_STR$1" [ "$(/usr/bin/date)" ] "$colClear
+  echo -e $colBold$ECHO_STR$1" [ "$(date)" ] "$colClear
 }
 
 # headerOut <HEADER> [<ECHO_STR>]
