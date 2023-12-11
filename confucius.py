@@ -272,6 +272,7 @@ quotes = [
 			"VICIOUS CIRCLE OF BOLLOCKING", # RL, XChem, Aug 2023
 			"CROWDS GATHER TO WITNESS FIRST PANINI ARRIVE IN IRELAND", # Waterford Whispers News
 			"BLESSED ARE THE TOASTED SANDWICH MAKERS", # Waterford Whispers News
+			"BEEF JESUS DIED FOR OUR SINS", # MW
 		]
 
 def main():
