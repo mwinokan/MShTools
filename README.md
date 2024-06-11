@@ -2,6 +2,8 @@
 
 This repository contains several scripts to improve quality of life in terminal and HPC workflows. Most programs have a basic help screen which can be accessed with the flag -h or --help. While some of the scripts are ready to go out of the box, follow the installation instructions at the bottom of this page for all features to work.
 
+***N.B. a separate branch exists for use at Diamond Light Source (DLS/SLURM), for which the following documentation may be out of date***
+
 ## Console IO:
 - `colours.sh` contains ANSI escape strings to change console output colours in the `MTools` colour scheme. Source this script to access the variables. (Portable)
 - `out.sh` functions to format output to console. Source this script to access the functions (Portable)
