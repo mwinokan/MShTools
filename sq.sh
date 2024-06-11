@@ -20,22 +20,6 @@ HISTORY=0
 JOB=0
 ALTERNATE=1
 
-ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
-if [[ $ALTHOST == *scarf* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == uan01 ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == ln0* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
-elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
-else
-  errorOut "Unrecognised cluster"
-  exit 1
-fi
-
 SHOW_PREV_NUM=10
 
 while test $# -gt 0; do
@@ -68,41 +52,17 @@ while test $# -gt 0; do
       shift
       NOFORMAT=1
       ;;
-    -louie)
-      shift
-      USERCODE=ls00338
-      ;;
-    -cedric)
-      shift
-      USERCODE=cv00220
-      ;;
     -max)
       shift
-      USERCODE=mw00368
+      USERCODE=tfb64483
       ;;
-    -roisin)
+    -matteo)
       shift
-      USERCODE=rg00700
+      USERCODE=qdf33232
       ;;
-    -george)
+    -kate)
       shift
-      USERCODE=gf00304
-      ;;
-    -juliana)
-      shift
-      USERCODE=jd01548
-      ;;
-    -harry)
-      shift
-      USERCODE=hw00892
-      ;;
-    -ben)
-      shift
-      USERCODE=bk00346
-      ;;
-    -charlotte)
-      shift
-      USERCODE=tv00180
+      USERCODE=aur19345
       ;;
     -s)
       shift
@@ -159,6 +119,25 @@ while test $# -gt 0; do
       ;;
   esac
 done
+
+ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
+
+if [[ -z $USERCODE ]] ; then
+  if [[ $ALTHOST == *scarf* ]] ; then
+    USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
+  elif [[ $ALTHOST == uan01 ]] ; then
+    USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
+  elif [[ $ALTHOST == ln0* ]] ; then
+    USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
+  elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
+    USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
+  elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
+    USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
+  elif [[ ! -f $MSHTOOLS/.suppressed_extern ]] ; then 
+    echo "Please pass a username with -u"
+    exit 1
+  fi
+fi
 
 if [[ $(hostname) == *eslogin* ]] ; then
   if [ $LOOP -eq 1 ] ; then
@@ -262,8 +241,10 @@ function header_strings {
 function show_queue {
   header_strings
 
+
   if [ ! -z $1 ] ; then
-    echo -e $colBold$USERCODE"'s queue"$colClear
+    # echo -e $colBold$USERCODE"'s queue"$colClear
+    echo -e $colBold$(replace_usercodes $USERCODE)"'s queue"$colClear
   fi
 
   # get the queue and number of jobs
@@ -324,7 +305,11 @@ function show_queue {
       QUEUE=$QUEUE"$colResult$REMAINING$colClear"
 
       LIMIT=$(convert4showtime ${SPLIT_LINE[3]})
-      QUEUE=$QUEUE"$colResult ($LIMIT)$colClear|"
+      if [ ! -z $LIMIT ]; then
+        QUEUE=$QUEUE"$colResult ($LIMIT)$colClear|"
+      else
+        QUEUE=$QUEUE"|"
+      fi
 
       # TASKS=${SPLIT_LINE[10]}
       # CPUS_PER_TASK=${SPLIT_LINE[11]}
@@ -583,14 +568,19 @@ function replace_usercodes {
 
   USER=$1
 
-  USER=$(echo $USER | sed 's/mw00368/max/')
-  USER=$(echo $USER | sed 's/ls00338/louie/')
-  USER=$(echo $USER | sed 's/cv00220/cedric/')
-  USER=$(echo $USER | sed 's/rg00700/roisin/')
-  USER=$(echo $USER | sed 's/gf00304/george/')
-  USER=$(echo $USER | sed 's/hw00892/harry/')
-  USER=$(echo $USER | sed 's/jd01548/juliana/')
-      
+  # USER=$(echo $USER | sed 's/mw00368/max/')
+  # USER=$(echo $USER | sed 's/ls00338/louie/')
+  # USER=$(echo $USER | sed 's/cv00220/cedric/')
+  # USER=$(echo $USER | sed 's/rg00700/roisin/')
+  # USER=$(echo $USER | sed 's/gf00304/george/')
+  # USER=$(echo $USER | sed 's/hw00892/harry/')
+  # USER=$(echo $USER | sed 's/jd01548/juliana/')
+  
+  USER=$(echo $USER | sed 's/tfb64483/max/')
+  USER=$(echo $USER | sed 's/qdf33232/matteo/')
+  USER=$(echo $USER | sed 's/aur19345/kate/')
+  USER=$(echo $USER | sed 's/wau47719/rdemel/')
+
   echo $USER
 
 }
@@ -625,9 +615,13 @@ function running_queue {
 
     QUEUE=$QUEUE"$colBold$(replace_usercodes ${SPLIT_LINE[0]})$colClear|"
     QUEUE=$QUEUE"$colBold${SPLIT_LINE[1]}$colClear|"
-    
-    REMAINING=$(( $(date +%s -d "${SPLIT_LINE[2]}") - $( date +%s ) ))
-    REMAINING=$(show_time $REMAINING)
+
+    if [[ ${SPLIT_LINE[2]} == 'NONE' ]] ; then
+      REMAINING="Unknown"
+    else
+      REMAINING=$(( $(date +%s -d "${SPLIT_LINE[2]}") - $( date +%s ) ))
+      REMAINING=$(show_time $REMAINING)
+    fi
 
     QUEUE=$QUEUE"$colResult$REMAINING$colClear|"
 
@@ -821,8 +815,16 @@ function job_info {
     if [ "$JOB_STATE" == "RUNNING" ] ; then
       ELAPSED=$(echo "$JOB_BUFFER" | grep -oP "(?<=RunTime=).*(?= TimeLimit)")
       ELAPSED=$(convert4showtime $ELAPSED)
-      varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
+      if [ -z $TIME_LIMIT ]; then
+        varOut "   Run Time" "$ELAPSED" $colResult $colResult
+      else
+        varOutEx "   Run Time" "$ELAPSED" "$TIME_LIMIT" $colResult $colResult
+      fi
+
     else
+
+      # pending
+
       varOut "      Limit" "$TIME_LIMIT" "" $colResult
     
       REMAINING=$(echo "$JOB_BUFFER" | grep -oP "(?<=StartTime=).*(?= EndTime)")
@@ -859,14 +861,20 @@ function job_info {
     COMMAND=$(echo "$JOB_BUFFER" | grep -oP "(?<=Command=).*")
     varOut "     Script" "$COMMAND" "" $colFile
 
-    if [ -f $WORKDIR/$JOB*.o ] ; then
-      O_LINES=$(wc -l $WORKDIR/$JOB*.o | awk '{ print $1 }')
-      varOut " \$JOB*.o #l" "$O_LINES" "" $colResult
+    STDOUT=$(echo "$JOB_BUFFER" | grep -oP "(?<=StdOut=).*")
+    varOut " Output Log" "$STDOUT" "" $colFile
+
+    if [ -f $STDOUT ] ; then
+      O_LINES=$(wc -l $STDOUT | awk '{ print $1 }')
+      varOut "Out. #lines" "$O_LINES" "" $colResult
     fi
 
-    if [ -f $WORKDIR/$JOB*.e ] ; then
-      E_LINES=$(wc -l $WORKDIR/$JOB*.e | awk '{ print $1 }')
-      varOut " \$JOB*.e #l" "$E_LINES" "" $colResult
+    STDERR=$(echo "$JOB_BUFFER" | grep -oP "(?<=StdErr=).*")
+    varOut "  Error Log" "$STDERR" "" $colFile
+
+    if [ -f $STDERR ] ; then
+      E_LINES=$(wc -l $STDERR | awk '{ print $1 }')
+      varOut "Err. #lines" "$E_LINES" "" $colResult
     fi
 
     if [ "$DEPENDENCY" != "(null)" ] ; then
@@ -877,6 +885,10 @@ function job_info {
       JOB=$DEPENDENCY
       job_info
     fi
+
+    # Priority=1 Nice=0 Account=(null) QOS=normal
+    # ReqTRES=cpu=252,mem=928264M,node=1,billing=252
+    # StdIn=/dev/null
 
   fi
 
@@ -1011,9 +1023,10 @@ else
 
   if [ $LOOP -eq 1 ] ; then
 
-    if command -v loop_win.py ; then
-	loop_win.py sq.sh
-    elif [ $ALTERNATE -eq 0 ] ; then
+    # if command -v loop_win.py ; then
+    # 	loop_win.py sq.sh -u $USERCODE
+
+    if [ $ALTERNATE -eq 0 ] ; then
 
       SHORT=1
       # main_loop

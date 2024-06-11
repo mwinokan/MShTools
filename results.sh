@@ -3,8 +3,9 @@
 source $MSHTOOLS/colours.sh
 
 LOOP=0
-DIR=0
-NO_ERRORS=0
+# DIR=0
+# NO_ERRORS=0
+EXTENSION=.log
 
 while test $# -gt 0; do
   case "$1" in
@@ -12,124 +13,103 @@ while test $# -gt 0; do
       echo -e "Usage for "$colFunc"results.sh"$colClear":"
       echo -e $colFunc"wd"$colClear$colArg" [-l] [-o <FILE>]"$colClear
       echo -e $colArg"-l"$colClear" auto-refreshing output"
-      echo -e $colArg"-o <FILE>"$colClear" open files in sublime"
-      echo -e $colArg"-op2g "$colClear" open pdb2gmx log in sublime"
+      # echo -e $colArg"-o <FILE>"$colClear" open files in sublime"
+      # echo -e $colArg"-op2g "$colClear" open pdb2gmx log in sublime"
       exit 5
       ;;
     -l)
       LOOP=1
       shift
       ;;
-    -d)
-      DIR=1
-      shift
-      ;;
-    -o|--open)
-      shift
-      OPEN_FILES=$OPEN_FILES" $1"
-      shift
-      ;;
-    -ne|--no-errors)
-      shift
-      NO_ERRORS=1
-      ;;
-    -op2g|--open-pdb2gmx)
-      shift
-      OPEN_FILES=$OPEN_FILES" gromacs.pdb2gmx.log"
-      ;;
+    # -d)
+    #   DIR=1
+    #   shift
+    #   ;;
+    # -o|--open)
+    #   shift
+    #   OPEN_FILES=$OPEN_FILES" $1"
+    #   shift
+    #   ;;
+    # -ne|--no-errors)
+    #   shift
+    #   NO_ERRORS=1
+    #   ;;
     *)
       break
       ;;
   esac
 done
 
+USERCODE=$(whoami)
+
 if [ $# -eq 0 ]
 then 
   # JOB_NUM=$(cat last_job)
-  echo -e $colError"No job number!"$colClear
-  exit 1
+  # echo -e $colError"No job number!"$colClear
+  # exit 1
+  LAST=1
 else
+  LAST=0
   JOB_NUM=$1
 fi
 
-sq.sh -j $JOB_NUM
-
 FILE_PATTERN=$JOB_NUM
+
+if [[ ! -z $MSHTOOLS_LOG_PATH ]] ; then
+  FILE_PATTERN=$MSHTOOLS_LOG_PATH/$FILE_PATTERN
+fi
+
+if [ $LAST -eq 1 ] ; then
+  if [[ -z $MSHTOOLS_LOG_PATH ]] ; then
+    echo "Must pass a JOBID or set MSHTOOLS_LOG_PATH"
+    exit 2
+  fi
+  LOG_FILE=$(ls -ltr $MSHTOOLS_LOG_PATH/*$EXTENSION | tail -n1 | awk '{print $9}')
+  # echo $LOG_FILE
+  SED_STR=s/$EXTENSION//
+  # echo basename $LOG_FILE' | 'sed $SED_STR
+  JOB_NUM=$(basename $LOG_FILE | sed $SED_STR)
+else
+  LOG_FILE=$FILE_PATTERN$EXTENSION
+fi
+
+# echo $JOB_NUM
 
 JOB_NUM=$(basename $JOB_NUM)
 JOB_NUM=${JOB_NUM:0:6}
 
+sq.sh -u $USERCODE -j $JOB_NUM
+
 ALTHOST=$(nslookup `hostname` | grep "Name:" | awk '{print $2}')
-if [[ $ALTHOST == *scarf* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == uan01 ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == ln0* ]] ; then
-  USERCODE=$(grep -oP "(?<=user=).*(?=;)" $MSHTOOLS/.suppressed_extern)
-elif [[ $ALTHOST == *.eureka2.surrey.ac.uk ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
-elif [[ $ALTHOST == *.swmgmt.eureka ]] ; then
-  USERCODE=$(grep -oP "(?<=usercode=).*(?=;)" $MSHTOOLS/.suppressed_gitlab)
-else
-  errorOut "Unrecognised cluster"
-  exit 1
-fi
 
 while :
 do
   if [ $LOOP -eq 1 ] ; then 
     clear 
   fi
-    # JOBNUM=$(tail -1 run_log 2>/dev/null | grep -oP '.*?(?=:)' | head -1 2>/dev/null)
     if [ $(squeue -l -u $USERCODE | grep $JOB_NUM | wc -l ) -ne 0 ] ; then
-      # LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
-      # if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
-      # if [ $DIR -eq 1 ] ; then
-      #   echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
-      #   ls --color=auto -xX $JOB_NUM
-      # fi
       echo -e $colBold"SLURM Queue"$colClear":"
-      # squeue -l -u $USERCODE
-      sq.sh | grep $JOB_NUM
-      # echo -e $colBold"\nFiles in "$colFile""\$PSCRATCH/$JOB_NUM$colClear":"
-      # ls --color=auto -xX $PSCRATCH/$JOB_NUM
+      sq.sh -u $USERCODE | grep $JOB_NUM
     fi
-  # else
-  #   LOG_ENTRY=$(tail -1 run_log 2>/dev/null)
-  #   if [ $? -eq 0 ] ; then echo -e "\n"$colBold"Log entry"$colClear": "$colArg$LOG_ENTRY$colClear ; fi
-  #   echo -e $colBold"\nFiles in "$colFile""$JOB_NUM$colClear":"
-  #   ls --color=auto -xX $JOB_NUM
-  # fi
 
-  # sq.sh | grep $JOB_NUM
-
-  O_FILE=$FILE_PATTERN*.o
-  E_FILE=$FILE_PATTERN*.e
+  # O_FILE=$FILE_PATTERN*.o
+  # E_FILE=$FILE_PATTERN*.e
   
-  # CAT_TEST=$(cat $JOB_NUM.o 2>/dev/null)
-  # if [ $? -eq 0 ] ; then
-  #   O_FILE=$JOB_NUM.o
-  # else
-  #   O_FILE=$JOB_NUM/$JOB_NUM.o
+  LOG_LINES=$(wc -l $LOG_FILE | awk '{ print $1 }')
+  
+  # O_LINES=$(wc -l $O_FILE | awk '{ print $1 }')
+  # E_LINES=$(wc -l $E_FILE | awk '{ print $1 }')
+
+
+
+  echo -e "\n"$colSuccess"Log file: "$LOG_FILE" [ "$LOG_FILE" lines ]"$colClear
+  # cat -n $O_FILE
+  cat -n $LOG_FILE
+
+  # if [ $NO_ERRORS = 0 ] ; then
+    # echo -e "\n"$colError"Error file: "$E_FILE" [ "$E_LINES" lines ]"$colClear
+  # cat -n $E_FILE
   # fi
-
-  # CAT_TEST=$(cat $JOB_NUM.e 2>/dev/null)
-  # if [ $? -eq 0 ] ; then
-  #   E_FILE=$JOB_NUM.e
-  # else
-  #   E_FILE=$JOB_NUM/$JOB_NUM.e
-  # fi
-
-  O_LINES=$(wc -l $O_FILE | awk '{ print $1 }')
-  E_LINES=$(wc -l $E_FILE | awk '{ print $1 }')
-
-  echo -e "\n"$colSuccess"Output file: "$O_FILE" [ "$O_LINES" lines ]"$colClear
-  cat -n $O_FILE
-
-  if [ $NO_ERRORS = 0 ] ; then
-    echo -e "\n"$colError"Error file: "$E_FILE" [ "$E_LINES" lines ]"$colClear
-    cat -n $E_FILE
-  fi
 
   if [ $LOOP -eq 0 ] ; then break ; fi
   
@@ -137,8 +117,8 @@ do
   sleep 1
 done
 
-if [ ! -z $OPEN_FILES ] ; then
-  for FILE in $OPEN_FILES ; do
-    sublime $JOB_NUM/$FILE
-  done
-fi
+# if [ ! -z $OPEN_FILES ] ; then
+#   for FILE in $OPEN_FILES ; do
+#     sublime $JOB_NUM/$FILE
+#   done
+# fi
